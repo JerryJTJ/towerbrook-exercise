@@ -1,7 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { tavilyThemeSearch } from "../tools/tavily.js";
 import { scraperSchema } from "../interfaces/gemini.interface.js";
-import type { Database } from "../interfaces/supabase.js";
 import { handleInsertPerson, insertCompanies } from "../tools/supabase.tool.js";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
@@ -9,8 +8,6 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 export async function runScraperAgent(theme: string) {
 	// Scrape
 	const data = await tavilyThemeSearch(theme);
-
-	console.log(data);
 
 	const result = await ai.models.generateContent({
 		model: "gemini-3.1-flash-lite",

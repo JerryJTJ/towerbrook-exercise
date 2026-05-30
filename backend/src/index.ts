@@ -15,6 +15,7 @@ import {
 	insertCompanies,
 	insertPeople,
 } from "./tools/supabase.tool.js";
+import { runResearcherAgent } from "./agents/researcher.js";
 
 const app = express();
 app.use(express.json());
@@ -30,6 +31,12 @@ app.get("/tavily-theme", async (req, res) => {
 	const data = req.body;
 	const resp = await tavilyThemeSearch(data.theme);
 	res.send(resp);
+});
+
+app.get("/research", async (req, res) => {
+	const data = req.body;
+	const resp = await runResearcherAgent(data.company);
+	res.json(resp);
 });
 
 app.get("/tavily_r/:id", async (req, res) => {
@@ -55,9 +62,6 @@ app.get("/google", async (req, res) => {
 
 app.post("/insert", async (req, res) => {
 	const data = scraperData;
-
-	console.log(data.companies);
-	console.log(data.people);
 
 	await insertCompanies(
 		data.companies.map((company) => ({ ...company, theme_id: 1 })),

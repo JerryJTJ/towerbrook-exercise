@@ -103,3 +103,21 @@ export async function getPerson(personId: number) {
 
 	return data;
 }
+
+// FINANCIAL DATA
+export async function insertCompanyFinancials(
+	financials: TablesInsert<"company_finance">[],
+) {
+	const { error } = await supabase.from("company_finance").insert(financials);
+
+	if (error) {
+		console.error("Error inserting company financials:", error);
+	}
+}
+
+export async function updateCompanyDescriptionById(
+	companyId: number,
+	description: string,
+) {
+	return supabase.from("company").update({ description }).eq("id", companyId);
+}

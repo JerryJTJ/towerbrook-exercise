@@ -41,23 +41,38 @@ export type Database = {
     Tables: {
       company: {
         Row: {
+          category: string | null
           created_at: string
+          description: string | null
+          EBITDA: number | null
+          equity: number | null
           id: number
           name: string
+          revenue: number | null
           theme_id: number | null
           website: string | null
         }
         Insert: {
+          category?: string | null
           created_at?: string
+          description?: string | null
+          EBITDA?: number | null
+          equity?: number | null
           id?: number
           name?: string
+          revenue?: number | null
           theme_id?: number | null
           website?: string | null
         }
         Update: {
+          category?: string | null
           created_at?: string
+          description?: string | null
+          EBITDA?: number | null
+          equity?: number | null
           id?: number
           name?: string
+          revenue?: number | null
           theme_id?: number | null
           website?: string | null
         }
@@ -70,6 +85,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      company_finance: {
+        Row: {
+          created_at: string
+          id: number
+          metric: string | null
+          source: string | null
+          value: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          metric?: string | null
+          source?: string | null
+          value?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          metric?: string | null
+          source?: string | null
+          value?: number | null
+        }
+        Relationships: []
       }
       people: {
         Row: {
