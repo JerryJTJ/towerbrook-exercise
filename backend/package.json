@@ -1,6 +1,10 @@
 {
 	"type": "module",
 	"dependencies": {
+		"@google/genai": "^2.7.0",
+		"@supabase/supabase-js": "^2.106.2",
+		"@tavily/core": "^0.7.3",
+		"dotenv": "^17.4.2",
 		"express": "^5.2.1",
 		"nodemon": "^3.1.14"
 	},
@@ -11,7 +15,7 @@
 		"typescript": "^6.0.3"
 	},
 	"scripts": {
-		"dev": "nodemon --exec tsx src/index.ts",
+		"dev": "nodemon --exec \"tsx --inspect\" src/index.ts",
 		"build": "tsc",
 		"start": "node dist/index.js"
 	}
