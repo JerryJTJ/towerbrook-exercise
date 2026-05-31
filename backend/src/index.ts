@@ -16,10 +16,21 @@ import {
 	insertPeople,
 } from "./tools/supabase.tool.js";
 import { runResearcherAgent } from "./agents/researcher.js";
+import { createClient } from "@supabase/supabase-js";
+import CompanyRouter from "./db/company.routes.js";
 
 const app = express();
 app.use(express.json());
 const port = 3001;
+
+// Supabase client setup
+export const supabase = createClient<Database>(
+	process.env.SUPABASE_URL || "",
+	process.env.SUPABASE_PUBLISHABLE_KEY || "",
+);
+
+// Routes
+app.use("/db/company", CompanyRouter);
 
 app.get("/tavily", async (req, res) => {
 	const data = req.body;
