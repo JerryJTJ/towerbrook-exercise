@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from "express";
 import { runResearcherAgent } from "./researcher.js";
 import { runScraperAgent } from "./scraper.js";
 import { runCallPrepAgent } from "./contact.js";
+import { runAnalystAgent } from "./analyst.js";
 
 const agentsRouter: Router = Router();
 
@@ -71,5 +72,27 @@ agentsRouter.get(
 		}
 	},
 );
+
+agentsRouter.post("/fit/company/:id", async (req: Request, res: Response) => {
+	const companyId = Number(req.params.id);
+
+	if (isNaN(companyId)) {
+		res.status(400).json({ error: "id must be a number" });
+		return;
+	}
+
+	try {
+		const result = await runAnalystAgent(companyId);
+
+		res.status(200).json({
+			success: true,
+			data: result,
+		});
+	} catch (error) {
+		res.status(500).json({
+			error: (error as Error).message ?? "Company fit agent failed",
+		});
+	}
+});
 
 export default agentsRouter;

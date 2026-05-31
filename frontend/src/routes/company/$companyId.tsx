@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	Avatar,
 	Box,
+	Button,
 	Chip,
 	CircularProgress,
-	Divider,
 	Link,
 	Paper,
 	Stack,
@@ -13,19 +13,21 @@ import {
 	Typography,
 } from "@mui/material";
 import BoltIcon from "@mui/icons-material/Bolt";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
-import PlaceIcon from "@mui/icons-material/Place";
-import LanguageIcon from "@mui/icons-material/Language";
-import LocalOfferIcon from "@mui/icons-material/LocalOffer";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import BusinessIcon from "@mui/icons-material/Business";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import { getCompanyById } from "~/api/company.api";
+
+import { getCompanyById, runCompanyFitAgent } from "~/api/company.api";
 import { getAllPeopleByCompanyId } from "~/api/people.api";
+
 import { useMemo } from "react";
 import { PeopleTable } from "~/components/PeopleTable";
+
+// ─── Route ────────────────────────────────────────────────────────────────────
 
 export const Route = createFileRoute("/company/$companyId")({
 	component: RouteComponent,
@@ -45,17 +47,56 @@ interface Theme {
 	name: string;
 }
 
+interface Concern {
+	risk?: string;
+	detail?: string;
+}
+
+interface Strength {
+	point?: string;
+	evidence?: string;
+}
+
+interface NextAction {
+	action?: string;
+	reason?: string;
+}
+
+interface TowerBrookRelevance {
+	theme?: string;
+	relevance?: string;
+}
+
+interface KeyMetricInterpretation {
+	metric?: string;
+	interpretation?: string;
+}
+
+interface CompanyInfo {
+	concerns?: Concern[];
+	strengths?: Strength[];
+	nextActions?: NextAction[];
+	towerBrookRelevance?: TowerBrookRelevance[];
+	keyMetricsInterpretation?: KeyMetricInterpretation[];
+	fitSummary?: string;
+	fitScore?: number;
+}
+
 interface Company {
 	id: number;
 	name: string;
 	category: string;
-	description: string;
-	website: string | null;
-	theme: Theme;
-	finances: Finance[];
+	description?: string;
+	website?: string | null;
+	score?: number;
+	info: CompanyInfo;
+	finances?: Finance[];
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const renderIf = (value: any, node: React.ReactNode) =>
+	value == null || value === "" ? null : node;
 
 const METRIC_CONFIG: Record<
 	string,
@@ -95,7 +136,7 @@ function isUrl(str: string): boolean {
 	}
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+// ─── Finance Card ─────────────────────────────────────────────────────────────
 
 function FinanceCard({ finance }: { finance: Finance }) {
 	const config = METRIC_CONFIG[finance.metric] ?? {
@@ -107,112 +148,53 @@ function FinanceCard({ finance }: { finance: Finance }) {
 	const sourceIsUrl = isUrl(finance.source);
 
 	return (
-		<Paper
-			variant="outlined"
-			sx={{ p: 2, height: "100%", borderRadius: 2 }}
-		>
+		<Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
 			<Stack spacing={1}>
-				<Box
-					sx={{
-						color: config.color,
-						display: "flex",
-						alignItems: "center",
-						gap: 0.5,
-					}}
-				>
+				<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
 					{config.icon}
-					<Typography
-						variant="caption"
-						color="text.secondary"
-						fontWeight={500}
-					>
+					<Typography variant="caption" color="text.secondary">
 						{config.label}
 					</Typography>
 				</Box>
+
 				<Typography variant="h5" fontWeight={600}>
 					{formatValue(finance.value)}
 				</Typography>
-				<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-					{sourceIsUrl ? (
-						<Link
-							href={finance.source}
-							target="_blank"
-							rel="noopener noreferrer"
-							variant="caption"
-							color="text.disabled"
-							underline="hover"
-							sx={{
-								display: "flex",
-								alignItems: "center",
-								gap: 0.25,
-							}}
-						>
-							Source <OpenInNewIcon sx={{ fontSize: 11 }} />
-						</Link>
-					) : (
-						<Tooltip
-							title={finance.source}
-							placement="bottom-start"
-						>
-							<Box
-								sx={{
-									display: "flex",
-									alignItems: "center",
-									gap: 0.25,
-									cursor: "default",
-								}}
-							>
-								<Typography
-									variant="caption"
-									color="text.disabled"
-								>
-									Industry estimate
-								</Typography>
-								<InfoOutlinedIcon
-									sx={{
-										fontSize: 12,
-										color: "text.disabled",
-									}}
-								/>
-							</Box>
-						</Tooltip>
-					)}
-				</Box>
+
+				{sourceIsUrl ? (
+					<Link
+						href={finance.source}
+						target="_blank"
+						variant="caption"
+					>
+						Source <OpenInNewIcon sx={{ fontSize: 11 }} />
+					</Link>
+				) : (
+					<Tooltip title={finance.source}>
+						<Typography variant="caption" color="text.disabled">
+							Industry estimate{" "}
+							<InfoOutlinedIcon sx={{ fontSize: 12 }} />
+						</Typography>
+					</Tooltip>
+				)}
 			</Stack>
 		</Paper>
 	);
 }
 
-function DetailRow({
-	icon,
-	label,
-	value,
+// ─── Company Page ─────────────────────────────────────────────────────────────
+
+function CompanyPage({
+	company,
+	onRefetch,
 }: {
-	icon: React.ReactNode;
-	label: string;
-	value: React.ReactNode;
+	company: Company;
+	onRefetch: () => void;
 }) {
-	return (
-		<Stack direction="row" alignItems="center" spacing={1.5} sx={{ py: 1 }}>
-			<Box sx={{ color: "text.disabled", display: "flex" }}>{icon}</Box>
-			<Typography
-				variant="body2"
-				color="text.secondary"
-				sx={{ width: 72, flexShrink: 0 }}
-			>
-				{label}
-			</Typography>
-			<Box sx={{ flex: 1 }}>{value}</Box>
-		</Stack>
-	);
-}
+	const queryClient = useQueryClient();
 
-// ─── Main page ────────────────────────────────────────────────────────────────
-
-function CompanyPage({ company }: { company: Company }) {
-	// People at company
 	const peopleQuery = useQuery({
-		queryKey: ["people", "company", company.id],
+		queryKey: ["people", company.id],
 		queryFn: () => getAllPeopleByCompanyId(company.id),
 	});
 
@@ -221,247 +203,328 @@ function CompanyPage({ company }: { company: Company }) {
 		[peopleQuery.data],
 	);
 
+	const mutation = useMutation({
+		mutationFn: () => runCompanyFitAgent(company.id),
+		onSuccess: onRefetch,
+	});
+
+	const info = company.info ?? {};
+
 	return (
-		<Box sx={{ maxWidth: 900, mx: "auto", px: { xs: 2, sm: 3 }, py: 4 }}>
-			{/* Hero */}
+		<Box sx={{ maxWidth: 950, mx: "auto", px: 3, py: 4 }}>
+			{/* HERO */}
 			<Paper
 				variant="outlined"
-				sx={{
-					p: 3,
-					mb: 2,
-					borderRadius: 3,
-					display: "flex",
-					alignItems: "flex-start",
-					gap: 2,
-				}}
+				sx={{ p: 3, mb: 2, display: "flex", gap: 2 }}
 			>
-				<Avatar
-					sx={{
-						width: 56,
-						height: 56,
-						bgcolor: "success.dark",
-						borderRadius: 2,
-						flexShrink: 0,
-					}}
-				>
+				<Avatar sx={{ bgcolor: "success.dark" }}>
 					<BoltIcon />
 				</Avatar>
 
-				<Box sx={{ flex: 1, minWidth: 0 }}>
+				<Box flex={1}>
 					<Stack
 						direction="row"
-						alignItems="center"
 						spacing={1}
+						alignItems="center"
 						flexWrap="wrap"
-						mb={0.5}
 					>
 						<Typography variant="h5" fontWeight={600}>
 							{company.name}
 						</Typography>
-						<Chip
-							label={`ID ${company.id}`}
-							size="small"
-							variant="outlined"
-							sx={{ fontSize: 11, height: 20 }}
-						/>
+
+						{renderIf(
+							company.score,
+							<Chip
+								label={`${company.score} Score`}
+								size="small"
+								color="primary"
+							/>,
+						)}
 					</Stack>
 
-					<Stack
-						direction="row"
-						spacing={1}
-						alignItems="center"
-						flexWrap="wrap"
-					>
-						<Chip
-							icon={<BusinessIcon />}
-							label={company.category}
-							size="small"
-							color="success"
-							variant="outlined"
-							sx={{ textTransform: "capitalize" }}
-						/>
-						{/* <Stack
-							direction="row"
-							alignItems="center"
-							spacing={0.5}
-						>
-							<PlaceIcon
-								sx={{ fontSize: 14, color: "text.disabled" }}
-							/>
+					<Chip
+						icon={<BusinessIcon />}
+						label={company.category}
+						size="small"
+						variant="outlined"
+						sx={{ mt: 1, textTransform: "capitalize" }}
+					/>
+				</Box>
+				<Button
+					sx={{ ml: "auto", alignSelf: "center" }}
+					variant={company.info ? "outlined" : "contained"}
+					size="small"
+					startIcon={
+						mutation.isPending ? (
+							<CircularProgress size={14} />
+						) : (
+							<AutoAwesomeIcon fontSize="small" />
+						)
+					}
+					onClick={() => mutation.mutate()}
+					disabled={mutation.isPending}
+					disableElevation
+				>
+					{mutation.isPending
+						? "Generating..."
+						: company.info
+							? "Research more"
+							: "Regenerate data"}
+				</Button>
+			</Paper>
+
+			{/* OVERVIEW */}
+			{(company.description || info.fitSummary) && (
+				<Paper variant="outlined" sx={{ p: 2.5, mb: 2 }}>
+					{renderIf(
+						company.description,
+						<>
 							<Typography
-								variant="caption"
-								color="text.secondary"
+								variant="overline"
+								color="text.disabled"
 							>
-								Cheyenne, Wyoming, USA
+								Overview
 							</Typography>
-						</Stack> */}
-					</Stack>
-				</Box>
-			</Paper>
+							<Typography
+								variant="body2"
+								color="text.secondary"
+								mt={1}
+							>
+								{company.description}
+							</Typography>
+						</>,
+					)}
 
-			{/* About */}
-			<Paper variant="outlined" sx={{ p: 2.5, mb: 2, borderRadius: 2 }}>
-				<Typography
-					variant="overline"
-					color="text.disabled"
-					display="block"
-					mb={1}
-				>
-					About
-				</Typography>
-				<Typography
-					variant="body2"
-					color="text.secondary"
-					lineHeight={1.8}
-				>
-					{company.description}
-				</Typography>
-			</Paper>
+					{renderIf(
+						info.fitSummary,
+						<>
+							<Typography
+								variant="overline"
+								color="text.disabled"
+								mt={2}
+							>
+								Fit Summary
+							</Typography>
+							<Typography variant="body2" color="text.secondary">
+								{info.fitSummary}
+							</Typography>
+						</>,
+					)}
+				</Paper>
+			)}
 
-			{/* Financials */}
-			<Typography
-				variant="overline"
-				color="text.disabled"
-				display="block"
-				mb={1}
-				px={0.25}
-			>
-				Financial overview
-			</Typography>
-			<Box sx={{ display: "flex", gap: 2, mb: 4, flexWrap: "wrap" }}>
-				{company.finances.map((f) => (
-					<Box key={f.id} sx={{ flex: "1 1 180px" }}>
-						<FinanceCard finance={f} />
-					</Box>
-				))}
-			</Box>
+			{/* FINANCIALS */}
+			{!!company.finances?.length && (
+				<>
+					<Typography variant="overline" color="text.disabled">
+						Financials
+					</Typography>
 
-			{/* Details + Theme */}
-			<Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-				<Box sx={{ flex: "1 1 300px" }}>
-					<Paper
-						variant="outlined"
-						sx={{ p: 2.5, borderRadius: 2, height: "100%" }}
-					>
-						<Typography
-							variant="overline"
-							color="text.disabled"
-							display="block"
-							mb={0.5}
-						>
-							Company details
-						</Typography>
-						<Divider sx={{ mb: 0.5 }} />
-						{/* <DetailRow
-							icon={<BusinessIcon fontSize="small" />}
-							label="Type"
-							value={
-								<Typography variant="body2" fontWeight={500}>
-									Private
-								</Typography>
-							}
-						/> */}
-						{/* <Divider />
-						<DetailRow
-							icon={<PlaceIcon fontSize="small" />}
-							label="HQ"
-							value={
-								<Typography variant="body2" fontWeight={500}>
-									Cheyenne, WY
-								</Typography>
-							}
-						/>
-						<Divider /> */}
-						<DetailRow
-							icon={<LanguageIcon fontSize="small" />}
-							label="Website"
-							value={
-								company.website ? (
-									<Link
-										href={company.website}
-										target="_blank"
-										rel="noopener noreferrer"
-										variant="body2"
-									>
-										{company.website}
-									</Link>
-								) : (
-									<Typography
-										variant="body2"
-										color="text.disabled"
-									>
-										Not listed
-									</Typography>
-								)
-							}
-						/>
-					</Paper>
-				</Box>
-
-				<Box sx={{ flex: "1 1 300px" }}>
-					<Paper
-						variant="outlined"
+					<Box
 						sx={{
-							p: 2.5,
-							borderRadius: 2,
-							height: "100%",
-							bgcolor: "success.50",
-							borderColor: "success.200",
+							display: "flex",
+							gap: 2,
+							flexWrap: "wrap",
+							mb: 3,
 						}}
 					>
-						<Typography
-							variant="overline"
-							color="success.dark"
-							display="block"
-							mb={1}
+						{company.finances.map((f) =>
+							f ? (
+								<Box key={f.id} sx={{ flex: "1 1 180px" }}>
+									<FinanceCard finance={f} />
+								</Box>
+							) : null,
+						)}
+					</Box>
+				</>
+			)}
+
+			{/* INVESTMENT ANALYSIS */}
+			{(info.concerns?.length || info.strengths?.length) && (
+				<Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mb: 3 }}>
+					{/* Concerns */}
+					{!!info.concerns?.length && (
+						<Paper
+							variant="outlined"
+							sx={{ p: 2, flex: "1 1 300px" }}
 						>
-							Investment theme
-						</Typography>
-						<Stack
-							direction="row"
-							alignItems="flex-start"
-							spacing={1}
+							<Typography fontWeight={600} mb={1}>
+								Concerns
+							</Typography>
+
+							{info.concerns.map((c, i) =>
+								c ? (
+									<Box key={i} mb={1}>
+										{renderIf(
+											c.risk,
+											<Typography
+												fontWeight={600}
+												variant="body2"
+											>
+												{c.risk}
+											</Typography>,
+										)}
+										{renderIf(
+											c.detail,
+											<Typography variant="caption">
+												{c.detail}
+											</Typography>,
+										)}
+									</Box>
+								) : null,
+							)}
+						</Paper>
+					)}
+
+					{/* Strengths */}
+					{!!info.strengths?.length && (
+						<Paper
+							variant="outlined"
+							sx={{ p: 2, flex: "1 1 300px" }}
 						>
-							<LocalOfferIcon
-								sx={{ color: "success.main", mt: 0.25 }}
-								fontSize="small"
-							/>
-							<Box>
-								<Typography
-									variant="body1"
-									fontWeight={600}
-									color="success.dark"
-								>
-									{company.theme.name}
-								</Typography>
-								<Typography
-									variant="caption"
-									color="success.main"
-								>
-									Theme ID {company.theme.id}
-								</Typography>
-							</Box>
-						</Stack>
-					</Paper>
+							<Typography fontWeight={600} mb={1}>
+								Strengths
+							</Typography>
+
+							{info.strengths.map((s, i) =>
+								s ? (
+									<Box key={i} mb={1}>
+										{renderIf(
+											s.point,
+											<Typography
+												fontWeight={600}
+												variant="body2"
+											>
+												{s.point}
+											</Typography>,
+										)}
+										{renderIf(
+											s.evidence,
+											<Typography variant="caption">
+												{s.evidence}
+											</Typography>,
+										)}
+									</Box>
+								) : null,
+							)}
+						</Paper>
+					)}
 				</Box>
+			)}
+
+			{/* METRICS + ACTIONS */}
+			<Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mb: 3 }}>
+				{!!info.keyMetricsInterpretation?.length && (
+					<Paper variant="outlined" sx={{ p: 2, flex: "1 1 300px" }}>
+						<Typography fontWeight={600} mb={1}>
+							Key metrics interpretation
+						</Typography>
+
+						{info.keyMetricsInterpretation.map((m, i) =>
+							m ? (
+								<Box key={i} mb={1}>
+									{renderIf(
+										m.metric,
+										<Typography fontWeight={600}>
+											{m.metric}
+										</Typography>,
+									)}
+									{renderIf(
+										m.interpretation,
+										<Typography variant="caption">
+											{m.interpretation}
+										</Typography>,
+									)}
+								</Box>
+							) : null,
+						)}
+					</Paper>
+				)}
+
+				{!!info.nextActions?.length && (
+					<Paper variant="outlined" sx={{ p: 2, flex: "1 1 300px" }}>
+						<Typography fontWeight={600} mb={1}>
+							Next actions
+						</Typography>
+
+						{info.nextActions.map((a, i) =>
+							a ? (
+								<Box key={i} mb={1}>
+									{renderIf(
+										a.action,
+										<Typography fontWeight={600}>
+											{a.action}
+										</Typography>,
+									)}
+									{renderIf(
+										a.reason,
+										<Typography variant="caption">
+											{a.reason}
+										</Typography>,
+									)}
+								</Box>
+							) : null,
+						)}
+					</Paper>
+				)}
 			</Box>
-			{/* People */}
-			<Typography
-				variant="overline"
-				color="text.disabled"
-				display="block"
-				mt={4}
-				mb={1}
-				px={0.25}
-			>
+
+			{/* RELEVANCE */}
+			{!!info.towerBrookRelevance?.length && (
+				<Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
+					<Typography fontWeight={600} mb={1}>
+						Strategic relevance
+					</Typography>
+
+					{info.towerBrookRelevance.map((t, i) =>
+						t ? (
+							<Box key={i} mb={1}>
+								{renderIf(
+									t.theme,
+									<Typography fontWeight={600}>
+										{t.theme}
+									</Typography>,
+								)}
+								{renderIf(
+									t.relevance,
+									<Typography variant="caption">
+										{t.relevance}
+									</Typography>,
+								)}
+							</Box>
+						) : null,
+					)}
+				</Paper>
+			)}
+
+			{/* WEBSITE */}
+			{company.website && (
+				<Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
+					<Typography fontWeight={600}>Website</Typography>
+
+					{company.website ? (
+						<Link href={company.website} target="_blank">
+							{company.website}
+						</Link>
+					) : (
+						<Typography color="text.disabled">
+							Not listed
+						</Typography>
+					)}
+				</Paper>
+			)}
+
+			{/* PEOPLE */}
+			<Typography variant="overline" color="text.disabled">
 				People
 			</Typography>
+
 			<PeopleTable data={peopleData} isLoading={peopleQuery.isLoading} />
 		</Box>
 	);
 }
 
-// ─── Route component ──────────────────────────────────────────────────────────
+// ─── Route Component ──────────────────────────────────────────────────────────
 
 function RouteComponent() {
 	const { companyId } = Route.useParams();
@@ -473,14 +536,7 @@ function RouteComponent() {
 
 	if (company.isLoading) {
 		return (
-			<Box
-				sx={{
-					display: "flex",
-					justifyContent: "center",
-					alignItems: "center",
-					minHeight: 300,
-				}}
-			>
+			<Box sx={{ display: "flex", justifyContent: "center", mt: 6 }}>
 				<CircularProgress />
 			</Box>
 		);
@@ -488,24 +544,18 @@ function RouteComponent() {
 
 	if (company.isError) {
 		return (
-			<Box sx={{ maxWidth: 900, mx: "auto", px: 3, py: 4 }}>
-				<Paper
-					variant="outlined"
-					sx={{ p: 3, borderRadius: 2, borderColor: "error.light" }}
-				>
-					<Typography color="error" fontWeight={500}>
-						Failed to load company
-					</Typography>
-					<Typography variant="body2" color="text.secondary" mt={0.5}>
-						{(company.error as Error)?.message ??
-							"An unexpected error occurred."}
-					</Typography>
-				</Paper>
-			</Box>
+			<Paper sx={{ p: 3, m: 3 }} variant="outlined">
+				<Typography color="error">Failed to load company</Typography>
+				<Typography variant="caption">
+					{(company.error as Error)?.message}
+				</Typography>
+			</Paper>
 		);
 	}
 
-	if (!company) return null;
+	if (!company.data) return null;
 
-	return <CompanyPage company={company.data} />;
+	return <CompanyPage company={company.data} onRefetch={company.refetch} />;
 }
+
+export default RouteComponent;

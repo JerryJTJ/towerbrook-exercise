@@ -414,7 +414,7 @@ function PersonPage({
 					mb: 2,
 					borderRadius: 3,
 					display: "flex",
-					alignItems: "flex-start",
+					alignItems: "center",
 					gap: 2,
 				}}
 			>
@@ -441,12 +441,6 @@ function PersonPage({
 						<Typography variant="h5" fontWeight={600}>
 							{person.name}
 						</Typography>
-						<Chip
-							label={`ID ${person.id}`}
-							size="small"
-							variant="outlined"
-							sx={{ fontSize: 11, height: 20 }}
-						/>
 					</Stack>
 					<Chip
 						icon={<WorkIcon />}
@@ -459,6 +453,7 @@ function PersonPage({
 				</Box>
 
 				<Button
+					sx={{ ml: "auto", alignSelf: "center" }}
 					variant={person.call_info ? "outlined" : "contained"}
 					size="small"
 					startIcon={

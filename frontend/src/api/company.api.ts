@@ -17,3 +17,15 @@ export async function getCompanyById(id: number) {
 		return {};
 	}
 }
+
+export async function runCompanyFitAgent(companyId: number) {
+	try {
+		const res = await axiosClient.post(
+			`/api/agents/fit/company/${companyId}`,
+		);
+		return res.data;
+	} catch (error) {
+		console.error("Company fit agent error:", error);
+		throw error;
+	}
+}
