@@ -10,4 +10,26 @@ export const peopleController = {
 			res.status(500).json({ error: "Failed to fetch people" });
 		}
 	},
+	async fetchAllPeopleByCompanyId(req: Request, res: Response) {
+		const { companyId } = req.params;
+
+		try {
+			const data = await peopleRepository.getAllPeopleByCompanyId(
+				Number(companyId),
+			);
+			res.json(data);
+		} catch (err) {
+			res.status(500).json({ error: "Failed to fetch people" });
+		}
+	},
+	async fetchPersonById(req: Request, res: Response) {
+		const { id } = req.params;
+
+		try {
+			const data = await peopleRepository.getPersonById(Number(id));
+			res.json(data);
+		} catch (err) {
+			res.status(500).json({ error: "Failed to fetch person" });
+		}
+	},
 };

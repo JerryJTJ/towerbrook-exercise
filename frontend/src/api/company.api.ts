@@ -8,3 +8,12 @@ export async function getAllCompanies() {
 		return [];
 	}
 }
+
+export async function getCompanyById(id: number) {
+	try {
+		const res = await axiosClient.get(`/db/company/${id}`);
+		return res.data;
+	} catch (error) {
+		return {};
+	}
+}

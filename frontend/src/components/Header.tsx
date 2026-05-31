@@ -1,11 +1,5 @@
 import { AppBar, Box, Toolbar, css, styled } from "@mui/material";
-import { CustomLink } from "./CustomLink";
-
-const StyledCustomLink = styled(CustomLink)(
-	({ theme }) => css`
-		color: ${theme.palette.common.white};
-	`,
-);
+import { CustomLink, StyledCustomLink } from "./CustomLink";
 
 export function Header() {
 	return (

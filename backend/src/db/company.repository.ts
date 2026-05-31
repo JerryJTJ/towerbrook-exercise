@@ -6,6 +6,8 @@ export const companyRepository = {
       id,
       name,
       category,
+      description,
+      website,
       theme:theme_id (
         id,
         name
@@ -24,5 +26,38 @@ export const companyRepository = {
 		}
 
 		return data ?? [];
+	},
+
+	async getCompanyById(id: number) {
+		const { data, error } = await supabase
+			.from("company")
+			.select(
+				`
+      id,
+      name,
+      category,
+      description,
+      website,
+      theme:theme_id (
+        id,
+        name
+      ),
+      finances:company_finance (
+        id,
+        metric,
+        value,
+        source
+      )
+    `,
+			)
+			.eq("id", id)
+			.single();
+
+		if (error) {
+			console.error(error);
+			throw error;
+		}
+
+		return data ?? {};
 	},
 };

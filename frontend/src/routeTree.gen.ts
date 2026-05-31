@@ -13,6 +13,9 @@ import { Route as ThemesRouteImport } from './routes/themes'
 import { Route as PeopleRouteImport } from './routes/people'
 import { Route as CompaniesRouteImport } from './routes/companies'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PeopleIndexRouteImport } from './routes/people/index'
+import { Route as PeoplePeopleIdRouteImport } from './routes/people/$peopleId'
+import { Route as CompanyCompanyIdRouteImport } from './routes/company/$companyId'
 
 const ThemesRoute = ThemesRouteImport.update({
   id: '/themes',
@@ -34,39 +37,84 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PeopleIndexRoute = PeopleIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PeopleRoute,
+} as any)
+const PeoplePeopleIdRoute = PeoplePeopleIdRouteImport.update({
+  id: '/$peopleId',
+  path: '/$peopleId',
+  getParentRoute: () => PeopleRoute,
+} as any)
+const CompanyCompanyIdRoute = CompanyCompanyIdRouteImport.update({
+  id: '/company/$companyId',
+  path: '/company/$companyId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/companies': typeof CompaniesRoute
-  '/people': typeof PeopleRoute
+  '/people': typeof PeopleRouteWithChildren
   '/themes': typeof ThemesRoute
+  '/company/$companyId': typeof CompanyCompanyIdRoute
+  '/people/$peopleId': typeof PeoplePeopleIdRoute
+  '/people/': typeof PeopleIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/companies': typeof CompaniesRoute
-  '/people': typeof PeopleRoute
   '/themes': typeof ThemesRoute
+  '/company/$companyId': typeof CompanyCompanyIdRoute
+  '/people/$peopleId': typeof PeoplePeopleIdRoute
+  '/people': typeof PeopleIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/companies': typeof CompaniesRoute
-  '/people': typeof PeopleRoute
+  '/people': typeof PeopleRouteWithChildren
   '/themes': typeof ThemesRoute
+  '/company/$companyId': typeof CompanyCompanyIdRoute
+  '/people/$peopleId': typeof PeoplePeopleIdRoute
+  '/people/': typeof PeopleIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/companies' | '/people' | '/themes'
+  fullPaths:
+    | '/'
+    | '/companies'
+    | '/people'
+    | '/themes'
+    | '/company/$companyId'
+    | '/people/$peopleId'
+    | '/people/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/companies' | '/people' | '/themes'
-  id: '__root__' | '/' | '/companies' | '/people' | '/themes'
+  to:
+    | '/'
+    | '/companies'
+    | '/themes'
+    | '/company/$companyId'
+    | '/people/$peopleId'
+    | '/people'
+  id:
+    | '__root__'
+    | '/'
+    | '/companies'
+    | '/people'
+    | '/themes'
+    | '/company/$companyId'
+    | '/people/$peopleId'
+    | '/people/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CompaniesRoute: typeof CompaniesRoute
-  PeopleRoute: typeof PeopleRoute
+  PeopleRoute: typeof PeopleRouteWithChildren
   ThemesRoute: typeof ThemesRoute
+  CompanyCompanyIdRoute: typeof CompanyCompanyIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,14 +147,49 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/people/': {
+      id: '/people/'
+      path: '/'
+      fullPath: '/people/'
+      preLoaderRoute: typeof PeopleIndexRouteImport
+      parentRoute: typeof PeopleRoute
+    }
+    '/people/$peopleId': {
+      id: '/people/$peopleId'
+      path: '/$peopleId'
+      fullPath: '/people/$peopleId'
+      preLoaderRoute: typeof PeoplePeopleIdRouteImport
+      parentRoute: typeof PeopleRoute
+    }
+    '/company/$companyId': {
+      id: '/company/$companyId'
+      path: '/company/$companyId'
+      fullPath: '/company/$companyId'
+      preLoaderRoute: typeof CompanyCompanyIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
+
+interface PeopleRouteChildren {
+  PeoplePeopleIdRoute: typeof PeoplePeopleIdRoute
+  PeopleIndexRoute: typeof PeopleIndexRoute
+}
+
+const PeopleRouteChildren: PeopleRouteChildren = {
+  PeoplePeopleIdRoute: PeoplePeopleIdRoute,
+  PeopleIndexRoute: PeopleIndexRoute,
+}
+
+const PeopleRouteWithChildren =
+  PeopleRoute._addFileChildren(PeopleRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CompaniesRoute: CompaniesRoute,
-  PeopleRoute: PeopleRoute,
+  PeopleRoute: PeopleRouteWithChildren,
   ThemesRoute: ThemesRoute,
+  CompanyCompanyIdRoute: CompanyCompanyIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
