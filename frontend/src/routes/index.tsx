@@ -1,14 +1,22 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { Stack, Typography } from '@mui/material'
+import z from 'zod'
+import { Counter } from '~/components/Counter'
 
-export const Route = createFileRoute('/')({ component: Home })
+export const Route = createFileRoute('/')({
+  validateSearch: z.object({
+    count: z.number().optional(),
+  }),
+  component: RouteComponent,
+})
 
-function Home() {
+function RouteComponent() {
   return (
-    <div className="p-8">
-      <h1 className="text-4xl font-bold">Welcome to TanStack Start</h1>
-      <p className="mt-4 text-lg">
-        Edit <code>src/routes/index.tsx</code> to get started.
-      </p>
-    </div>
+    <Stack alignItems="center">
+      <Typography variant="h1" marginBlockEnd={4}>
+        Hello world!
+      </Typography>
+      <Counter />
+    </Stack>
   )
 }
