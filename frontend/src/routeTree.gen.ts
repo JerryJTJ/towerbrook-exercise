@@ -14,6 +14,7 @@ import { Route as PeopleRouteImport } from './routes/people'
 import { Route as CompaniesRouteImport } from './routes/companies'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PeopleIndexRouteImport } from './routes/people/index'
+import { Route as ThemeThemeIdRouteImport } from './routes/theme/$themeId'
 import { Route as PeoplePeopleIdRouteImport } from './routes/people/$peopleId'
 import { Route as CompanyCompanyIdRouteImport } from './routes/company/$companyId'
 
@@ -42,6 +43,11 @@ const PeopleIndexRoute = PeopleIndexRouteImport.update({
   path: '/',
   getParentRoute: () => PeopleRoute,
 } as any)
+const ThemeThemeIdRoute = ThemeThemeIdRouteImport.update({
+  id: '/theme/$themeId',
+  path: '/theme/$themeId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PeoplePeopleIdRoute = PeoplePeopleIdRouteImport.update({
   id: '/$peopleId',
   path: '/$peopleId',
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/themes': typeof ThemesRoute
   '/company/$companyId': typeof CompanyCompanyIdRoute
   '/people/$peopleId': typeof PeoplePeopleIdRoute
+  '/theme/$themeId': typeof ThemeThemeIdRoute
   '/people/': typeof PeopleIndexRoute
 }
 export interface FileRoutesByTo {
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/themes': typeof ThemesRoute
   '/company/$companyId': typeof CompanyCompanyIdRoute
   '/people/$peopleId': typeof PeoplePeopleIdRoute
+  '/theme/$themeId': typeof ThemeThemeIdRoute
   '/people': typeof PeopleIndexRoute
 }
 export interface FileRoutesById {
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/themes': typeof ThemesRoute
   '/company/$companyId': typeof CompanyCompanyIdRoute
   '/people/$peopleId': typeof PeoplePeopleIdRoute
+  '/theme/$themeId': typeof ThemeThemeIdRoute
   '/people/': typeof PeopleIndexRoute
 }
 export interface FileRouteTypes {
@@ -89,6 +98,7 @@ export interface FileRouteTypes {
     | '/themes'
     | '/company/$companyId'
     | '/people/$peopleId'
+    | '/theme/$themeId'
     | '/people/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/themes'
     | '/company/$companyId'
     | '/people/$peopleId'
+    | '/theme/$themeId'
     | '/people'
   id:
     | '__root__'
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '/themes'
     | '/company/$companyId'
     | '/people/$peopleId'
+    | '/theme/$themeId'
     | '/people/'
   fileRoutesById: FileRoutesById
 }
@@ -115,6 +127,7 @@ export interface RootRouteChildren {
   PeopleRoute: typeof PeopleRouteWithChildren
   ThemesRoute: typeof ThemesRoute
   CompanyCompanyIdRoute: typeof CompanyCompanyIdRoute
+  ThemeThemeIdRoute: typeof ThemeThemeIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -154,6 +167,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PeopleIndexRouteImport
       parentRoute: typeof PeopleRoute
     }
+    '/theme/$themeId': {
+      id: '/theme/$themeId'
+      path: '/theme/$themeId'
+      fullPath: '/theme/$themeId'
+      preLoaderRoute: typeof ThemeThemeIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/people/$peopleId': {
       id: '/people/$peopleId'
       path: '/$peopleId'
@@ -190,6 +210,7 @@ const rootRouteChildren: RootRouteChildren = {
   PeopleRoute: PeopleRouteWithChildren,
   ThemesRoute: ThemesRoute,
   CompanyCompanyIdRoute: CompanyCompanyIdRoute,
+  ThemeThemeIdRoute: ThemeThemeIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

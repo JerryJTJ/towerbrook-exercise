@@ -7,6 +7,7 @@ export type CompanyApi = {
 	id: number;
 	name: string;
 	category: string;
+	score: number;
 	theme: { id: number; name: string } | null;
 	finances: {
 		id: number;
@@ -21,6 +22,7 @@ type CompanyRow = {
 	name: string;
 	category: string;
 	theme: string;
+	score: number;
 	revenue: number | null;
 	EBITDA: number | null;
 	equity: number | null;
@@ -37,6 +39,7 @@ export function toCompanyRows(data: CompanyApi[]): CompanyRow[] {
 			id: c.id,
 			name: c.name,
 			category: c.category,
+			score: c.score,
 			theme: c.theme?.name ?? "—",
 			revenue: financeMap.revenue ?? null,
 			EBITDA: financeMap.EBITDA ?? null,
@@ -61,9 +64,10 @@ const columns: GridColDef[] = [
 	},
 	{ field: "category", headerName: "Category", width: 140 },
 	{ field: "theme", headerName: "Theme", width: 140, type: "string" },
-	{ field: "revenue", headerName: "Revenue", width: 140, type: "number" },
-	{ field: "EBITDA", headerName: "EBITDA", width: 140, type: "number" },
-	{ field: "equity", headerName: "Equity", width: 140, type: "number" },
+	{ field: "score", headerName: "Score", width: 140, type: "string" },
+	// { field: "revenue", headerName: "Revenue", width: 140, type: "number" },
+	// { field: "EBITDA", headerName: "EBITDA", width: 140, type: "number" },
+	// { field: "equity", headerName: "Equity", width: 140, type: "number" },
 ];
 
 type CompanyTableProps = {

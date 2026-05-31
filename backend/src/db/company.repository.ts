@@ -9,6 +9,7 @@ export const companyRepository = {
       category,
       description,
       website,
+      score,
       theme:theme_id (
         id,
         name

@@ -107,6 +107,8 @@ export async function runAnalystAgent(
 		}>,
 	]);
 
+	console.log(research);
+
 	// Step 3: persist enriched description
 	if (research?.description) {
 		await companyRepository.updateCompanyInfo(companyId, {
