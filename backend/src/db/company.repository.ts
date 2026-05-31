@@ -6,6 +6,10 @@ export const companyRepository = {
       id,
       name,
       category,
+      theme:theme_id (
+        id,
+        name
+      ),
       finances:company_finance (
         id,
         metric,

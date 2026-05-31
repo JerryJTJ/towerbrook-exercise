@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express from "express";
+import cors from "cors";
 import { runScraperAgent } from "./agents/scraper.js";
 import {
 	tavilyCompanyResearch,
@@ -18,9 +19,16 @@ import {
 import { runResearcherAgent } from "./agents/researcher.js";
 import { createClient } from "@supabase/supabase-js";
 import CompanyRouter from "./db/company.routes.js";
+import PeopleRouter from "./db/people.routes.js";
 
 const app = express();
 app.use(express.json());
+
+app.use(
+	cors({
+		origin: "http://localhost:3000",
+	}),
+);
 const port = 3001;
 
 // Supabase client setup
@@ -31,6 +39,7 @@ export const supabase = createClient<Database>(
 
 // Routes
 app.use("/db/company", CompanyRouter);
+app.use("/db/people", PeopleRouter);
 
 app.get("/tavily", async (req, res) => {
 	const data = req.body;

@@ -22,7 +22,7 @@ export function Header() {
 					>
 						TB People Engine
 					</StyledCustomLink>
-					<StyledCustomLink to="/experts">Experts</StyledCustomLink>
+					<StyledCustomLink to="/people">People</StyledCustomLink>
 					<StyledCustomLink to="/companies">
 						Companies
 					</StyledCustomLink>

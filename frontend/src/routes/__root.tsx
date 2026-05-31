@@ -5,20 +5,33 @@ import {
 	Outlet,
 	Scripts,
 	createRootRoute,
+	createRootRouteWithContext,
 } from "@tanstack/react-router";
 import { CacheProvider } from "@emotion/react";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import type { QueryClient } from "@tanstack/react-query";
 import { Container, CssBaseline, ThemeProvider } from "@mui/material";
 import createCache from "@emotion/cache";
 import fontsourceVariableRobotoCss from "@fontsource-variable/roboto?url";
 import React from "react";
 import { theme } from "~/setup/theme";
 import { Header } from "~/components/Header";
+import { DefaultCatchBoundary } from "~/components/DefaultCatchBoundary";
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<{
+	queryClient: QueryClient;
+}>()({
 	head: () => ({
 		links: [{ rel: "stylesheet", href: fontsourceVariableRobotoCss }],
 	}),
 	component: RootComponent,
+	errorComponent: (props) => {
+		return (
+			<RootDocument>
+				<DefaultCatchBoundary {...props} />
+			</RootDocument>
+		);
+	},
 });
 
 function RootComponent() {
@@ -56,8 +69,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 						{children}
 					</Container>
 				</Providers>
-
 				<TanStackRouterDevtools position="bottom-right" />
+				<ReactQueryDevtools buttonPosition="bottom-left" />
 				<Scripts />
 			</body>
 		</html>

@@ -10,7 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ThemesRouteImport } from './routes/themes'
-import { Route as ExpertsRouteImport } from './routes/experts'
+import { Route as PeopleRouteImport } from './routes/people'
 import { Route as CompaniesRouteImport } from './routes/companies'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -19,9 +19,9 @@ const ThemesRoute = ThemesRouteImport.update({
   path: '/themes',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ExpertsRoute = ExpertsRouteImport.update({
-  id: '/experts',
-  path: '/experts',
+const PeopleRoute = PeopleRouteImport.update({
+  id: '/people',
+  path: '/people',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompaniesRoute = CompaniesRouteImport.update({
@@ -38,34 +38,34 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/companies': typeof CompaniesRoute
-  '/experts': typeof ExpertsRoute
+  '/people': typeof PeopleRoute
   '/themes': typeof ThemesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/companies': typeof CompaniesRoute
-  '/experts': typeof ExpertsRoute
+  '/people': typeof PeopleRoute
   '/themes': typeof ThemesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/companies': typeof CompaniesRoute
-  '/experts': typeof ExpertsRoute
+  '/people': typeof PeopleRoute
   '/themes': typeof ThemesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/companies' | '/experts' | '/themes'
+  fullPaths: '/' | '/companies' | '/people' | '/themes'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/companies' | '/experts' | '/themes'
-  id: '__root__' | '/' | '/companies' | '/experts' | '/themes'
+  to: '/' | '/companies' | '/people' | '/themes'
+  id: '__root__' | '/' | '/companies' | '/people' | '/themes'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CompaniesRoute: typeof CompaniesRoute
-  ExpertsRoute: typeof ExpertsRoute
+  PeopleRoute: typeof PeopleRoute
   ThemesRoute: typeof ThemesRoute
 }
 
@@ -78,11 +78,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ThemesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/experts': {
-      id: '/experts'
-      path: '/experts'
-      fullPath: '/experts'
-      preLoaderRoute: typeof ExpertsRouteImport
+    '/people': {
+      id: '/people'
+      path: '/people'
+      fullPath: '/people'
+      preLoaderRoute: typeof PeopleRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/companies': {
@@ -105,14 +105,14 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CompaniesRoute: CompaniesRoute,
-  ExpertsRoute: ExpertsRoute,
+  PeopleRoute: PeopleRoute,
   ThemesRoute: ThemesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 
-import type { getRouter } from './router.tsx'
+import type { getRouter } from './router.ts'
 import type { createStart } from '@tanstack/react-start'
 declare module '@tanstack/react-start' {
   interface Register {

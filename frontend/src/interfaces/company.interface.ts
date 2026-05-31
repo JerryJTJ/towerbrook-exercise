@@ -2,7 +2,7 @@ export interface Company {
 	id: number;
 	created_at: string;
 	name: string;
-	theme_id: number | null;
+	theme: string;
 	website: string | null;
 	category: string;
 	description: string | null;
