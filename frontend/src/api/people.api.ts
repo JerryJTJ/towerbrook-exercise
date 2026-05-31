@@ -26,3 +26,8 @@ export async function getPersonById(id: number) {
 		return [];
 	}
 }
+
+export async function getCallBriefByPersonId(id: number) {
+	const res = await axiosClient.get(`/api/agents/callprep/person/${id}`);
+	return res.data;
+}

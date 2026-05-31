@@ -1,3 +1,4 @@
+import type { CallPrepOutput } from "../agents/contact.js";
 import { supabase } from "../index.js";
 
 const peopleApiResponse = `
@@ -13,6 +14,8 @@ const peopleApiResponse = `
         name
       )
     `;
+
+const peopleApiResponseDetailed = peopleApiResponse + ", call_info";
 
 export const peopleRepository = {
 	async getAllPeople() {
@@ -45,7 +48,7 @@ export const peopleRepository = {
 	async getPersonById(id: number) {
 		const { data, error } = await supabase
 			.from("people")
-			.select(peopleApiResponse)
+			.select(peopleApiResponseDetailed)
 			.eq("id", id)
 			.single();
 
@@ -55,5 +58,19 @@ export const peopleRepository = {
 		}
 
 		return data ?? [];
+	},
+
+	async updatePersonCallInfo(id: number, callInfo: {}) {
+		const { error } = await supabase
+			.from("people")
+			.update({
+				call_info: callInfo,
+			})
+			.eq("id", id);
+
+		if (error) {
+			console.error(error);
+			throw error;
+		}
 	},
 };

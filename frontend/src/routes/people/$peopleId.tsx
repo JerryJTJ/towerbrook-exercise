@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import {
 	Avatar,
 	Box,
@@ -9,13 +9,23 @@ import {
 	Paper,
 	Stack,
 	Typography,
+	Button,
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import BusinessIcon from "@mui/icons-material/Business";
 import WorkIcon from "@mui/icons-material/Work";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import PhoneIcon from "@mui/icons-material/Phone";
+import EmailIcon from "@mui/icons-material/Email";
+import LinkedInIcon from "@mui/icons-material/LinkedIn";
+import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
+import TopicIcon from "@mui/icons-material/Topic";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import TaskAltIcon from "@mui/icons-material/TaskAlt";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import { StyledCustomLinkBlack } from "~/components/CustomLink";
-import { getPersonById } from "~/api/people.api";
+import { getCallBriefByPersonId, getPersonById } from "~/api/people.api";
+import axios from "axios";
 
 export const Route = createFileRoute("/people/$peopleId")({
 	component: RouteComponent,
@@ -23,12 +33,27 @@ export const Route = createFileRoute("/people/$peopleId")({
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+interface CallPrepOutput {
+	backgroundSummary: string;
+	contactDetails: {
+		email: string;
+		phone: string;
+		linkedin: string;
+		other: string;
+	};
+	keyTopics: { topic: string; rationale: string }[];
+	suggestedQuestions: { question: string; intent: string }[];
+	redFlags: { flag: string; detail: string }[];
+	recommendedFollowUps: { action: string; reason: string }[];
+}
+
 interface Person {
 	id: number;
 	name: string;
 	role: string;
 	theme: { id: number; name: string };
 	company: { id: number; name: string };
+	call_info: CallPrepOutput | null;
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -57,9 +82,328 @@ function DetailRow({
 	);
 }
 
+function CallInfoSection({ callInfo }: { callInfo: CallPrepOutput }) {
+	const { contactDetails: c } = callInfo;
+	const hasContact = c.email || c.phone || c.linkedin || c.other;
+
+	return (
+		<Box mt={3}>
+			<Typography
+				variant="overline"
+				color="text.disabled"
+				display="block"
+				mb={1}
+				px={0.25}
+			>
+				Call Brief
+			</Typography>
+
+			{/* Background */}
+			<Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2, mb: 2 }}>
+				<Typography
+					variant="body2"
+					color="text.secondary"
+					lineHeight={1.8}
+				>
+					{callInfo.backgroundSummary}
+				</Typography>
+			</Paper>
+
+			{/* Contact + Topics row */}
+			<Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mb: 2 }}>
+				{hasContact && (
+					<Paper
+						variant="outlined"
+						sx={{ p: 2.5, borderRadius: 2, flex: "1 1 200px" }}
+					>
+						<Typography
+							variant="overline"
+							color="text.disabled"
+							display="block"
+							mb={1}
+						>
+							Contact
+						</Typography>
+						<Stack spacing={1}>
+							{c.email && (
+								<Stack
+									direction="row"
+									spacing={1}
+									alignItems="center"
+								>
+									<EmailIcon
+										fontSize="small"
+										sx={{ color: "text.disabled" }}
+									/>
+									<Typography variant="body2">
+										{c.email}
+									</Typography>
+								</Stack>
+							)}
+							{c.phone && (
+								<Stack
+									direction="row"
+									spacing={1}
+									alignItems="center"
+								>
+									<PhoneIcon
+										fontSize="small"
+										sx={{ color: "text.disabled" }}
+									/>
+									<Typography variant="body2">
+										{c.phone}
+									</Typography>
+								</Stack>
+							)}
+							{c.linkedin && (
+								<Stack
+									direction="row"
+									spacing={1}
+									alignItems="center"
+								>
+									<LinkedInIcon
+										fontSize="small"
+										sx={{ color: "text.disabled" }}
+									/>
+									<Typography variant="body2">
+										{c.linkedin}
+									</Typography>
+								</Stack>
+							)}
+							{c.other && (
+								<Typography
+									variant="body2"
+									color="text.secondary"
+								>
+									{c.other}
+								</Typography>
+							)}
+						</Stack>
+					</Paper>
+				)}
+
+				{callInfo.keyTopics.length > 0 && (
+					<Paper
+						variant="outlined"
+						sx={{ p: 2.5, borderRadius: 2, flex: "2 1 300px" }}
+					>
+						<Typography
+							variant="overline"
+							color="text.disabled"
+							display="block"
+							mb={1}
+						>
+							Key Topics
+						</Typography>
+						<Stack spacing={1.5}>
+							{callInfo.keyTopics.map((t, i) => (
+								<Stack
+									key={i}
+									direction="row"
+									spacing={1}
+									alignItems="flex-start"
+								>
+									<TopicIcon
+										fontSize="small"
+										sx={{
+											color: "info.main",
+											mt: 0.25,
+											flexShrink: 0,
+										}}
+									/>
+									<Box>
+										<Typography
+											variant="body2"
+											fontWeight={600}
+										>
+											{t.topic}
+										</Typography>
+										<Typography
+											variant="caption"
+											color="text.secondary"
+										>
+											{t.rationale}
+										</Typography>
+									</Box>
+								</Stack>
+							))}
+						</Stack>
+					</Paper>
+				)}
+			</Box>
+
+			{/* Questions + Red Flags row */}
+			<Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mb: 2 }}>
+				{callInfo.suggestedQuestions.length > 0 && (
+					<Paper
+						variant="outlined"
+						sx={{ p: 2.5, borderRadius: 2, flex: "1 1 300px" }}
+					>
+						<Typography
+							variant="overline"
+							color="text.disabled"
+							display="block"
+							mb={1}
+						>
+							Suggested Questions
+						</Typography>
+						<Stack spacing={1.5}>
+							{callInfo.suggestedQuestions.map((q, i) => (
+								<Stack
+									key={i}
+									direction="row"
+									spacing={1}
+									alignItems="flex-start"
+								>
+									<QuestionAnswerIcon
+										fontSize="small"
+										sx={{
+											color: "primary.main",
+											mt: 0.25,
+											flexShrink: 0,
+										}}
+									/>
+									<Box>
+										<Typography
+											variant="body2"
+											fontWeight={500}
+										>
+											{q.question}
+										</Typography>
+										<Typography
+											variant="caption"
+											color="text.secondary"
+										>
+											{q.intent}
+										</Typography>
+									</Box>
+								</Stack>
+							))}
+						</Stack>
+					</Paper>
+				)}
+
+				{callInfo.redFlags.length > 0 && (
+					<Paper
+						variant="outlined"
+						sx={{
+							p: 2.5,
+							borderRadius: 2,
+							flex: "1 1 300px",
+							borderColor: "warning.200",
+							bgcolor: "warning.50",
+						}}
+					>
+						<Typography
+							variant="overline"
+							color="warning.dark"
+							display="block"
+							mb={1}
+						>
+							Red Flags
+						</Typography>
+						<Stack spacing={1.5}>
+							{callInfo.redFlags.map((r, i) => (
+								<Stack
+									key={i}
+									direction="row"
+									spacing={1}
+									alignItems="flex-start"
+								>
+									<WarningAmberIcon
+										fontSize="small"
+										sx={{
+											color: "warning.main",
+											mt: 0.25,
+											flexShrink: 0,
+										}}
+									/>
+									<Box>
+										<Typography
+											variant="body2"
+											fontWeight={500}
+											color="warning.dark"
+										>
+											{r.flag}
+										</Typography>
+										<Typography
+											variant="caption"
+											color="text.secondary"
+										>
+											{r.detail}
+										</Typography>
+									</Box>
+								</Stack>
+							))}
+						</Stack>
+					</Paper>
+				)}
+			</Box>
+
+			{/* Follow-ups */}
+			{callInfo.recommendedFollowUps.length > 0 && (
+				<Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}>
+					<Typography
+						variant="overline"
+						color="text.disabled"
+						display="block"
+						mb={1}
+					>
+						Recommended Follow-ups
+					</Typography>
+					<Stack spacing={1.5}>
+						{callInfo.recommendedFollowUps.map((f, i) => (
+							<Stack
+								key={i}
+								direction="row"
+								spacing={1}
+								alignItems="flex-start"
+							>
+								<TaskAltIcon
+									fontSize="small"
+									sx={{
+										color: "success.main",
+										mt: 0.25,
+										flexShrink: 0,
+									}}
+								/>
+								<Box>
+									<Typography
+										variant="body2"
+										fontWeight={500}
+									>
+										{f.action}
+									</Typography>
+									<Typography
+										variant="caption"
+										color="text.secondary"
+									>
+										{f.reason}
+									</Typography>
+								</Box>
+							</Stack>
+						))}
+					</Stack>
+				</Paper>
+			)}
+		</Box>
+	);
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
-function PersonPage({ person }: { person: Person }) {
+function PersonPage({
+	person,
+	onRefetch,
+}: {
+	person: Person;
+	onRefetch: () => void;
+}) {
+	const mutation = useMutation({
+		mutationFn: () => getCallBriefByPersonId(person.id),
+		onSuccess: onRefetch,
+	});
+
 	return (
 		<Box sx={{ maxWidth: 900, mx: "auto", px: { xs: 2, sm: 3 }, py: 4 }}>
 			{/* Hero */}
@@ -104,7 +448,6 @@ function PersonPage({ person }: { person: Person }) {
 							sx={{ fontSize: 11, height: 20 }}
 						/>
 					</Stack>
-
 					<Chip
 						icon={<WorkIcon />}
 						label={person.role}
@@ -114,6 +457,27 @@ function PersonPage({ person }: { person: Person }) {
 						sx={{ textTransform: "capitalize" }}
 					/>
 				</Box>
+
+				<Button
+					variant={person.call_info ? "outlined" : "contained"}
+					size="small"
+					startIcon={
+						mutation.isPending ? (
+							<CircularProgress size={14} />
+						) : (
+							<AutoAwesomeIcon fontSize="small" />
+						)
+					}
+					onClick={() => mutation.mutate()}
+					disabled={mutation.isPending}
+					disableElevation
+				>
+					{mutation.isPending
+						? "Generating..."
+						: person.call_info
+							? "Regenerate Brief"
+							: "Generate Brief"}
+				</Button>
 			</Paper>
 
 			{/* Details + Theme */}
@@ -206,6 +570,11 @@ function PersonPage({ person }: { person: Person }) {
 					</Paper>
 				</Box>
 			</Box>
+
+			{/* Call Brief */}
+			{person.call_info && (
+				<CallInfoSection callInfo={person.call_info} />
+			)}
 		</Box>
 	);
 }
@@ -256,5 +625,5 @@ function RouteComponent() {
 
 	if (!query.data) return null;
 
-	return <PersonPage person={query.data} />;
+	return <PersonPage person={query.data} onRefetch={query.refetch} />;
 }

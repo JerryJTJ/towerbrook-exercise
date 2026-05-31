@@ -20,6 +20,7 @@ import { runResearcherAgent } from "./agents/researcher.js";
 import { createClient } from "@supabase/supabase-js";
 import CompanyRouter from "./db/company.routes.js";
 import PeopleRouter from "./db/people.routes.js";
+import agentsRouter from "./agents/agents.routes.js";
 
 const app = express();
 app.use(express.json());
@@ -40,6 +41,7 @@ export const supabase = createClient<Database>(
 // Routes
 app.use("/db/company", CompanyRouter);
 app.use("/db/people", PeopleRouter);
+app.use("/api/agents", agentsRouter);
 
 app.get("/tavily", async (req, res) => {
 	const data = req.body;
