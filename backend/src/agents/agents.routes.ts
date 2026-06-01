@@ -3,21 +3,36 @@ import { runResearcherAgent } from "./researcher.js";
 import { runScraperAgent } from "./scraper.js";
 import { runCallPrepAgent } from "./contact.js";
 import { runAnalystAgent } from "./analyst.js";
+import { supabase } from "../index.js";
 
 const agentsRouter: Router = Router();
 
-agentsRouter.post("/scraper", async (req: Request, res: Response) => {
-	const { theme } = req.body;
+agentsRouter.post("/scraper/theme/:id", async (req: Request, res: Response) => {
+	console.log(
+		"Received request to run scraper agent for theme ID:",
+		req.params.id,
+	);
+	const themeId = Number(req.params.id);
 
-	if (!theme || typeof theme !== "string") {
+	const { data, error } = await supabase
+		.from("theme")
+		.select("name")
+		.eq("id", Number(themeId))
+		.single();
+
+	if (error || !data) return res.status(500).json({ error: error.message });
+
+	const theme = data.name;
+
+	if (!themeId || typeof themeId !== "number") {
 		res.status(400).json({
-			error: "theme is required and must be a string",
+			error: "theme is required and must be a number",
 		});
 		return;
 	}
 
 	try {
-		await runScraperAgent(theme);
+		await runScraperAgent(themeId);
 		res.status(200).json({
 			success: true,
 			message: `Scraper completed for theme: "${theme}"`,

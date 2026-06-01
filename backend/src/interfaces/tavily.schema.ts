@@ -2,6 +2,7 @@ export const scraperSchema = {
 	properties: {
 		people: {
 			type: "array",
+			description: "List of people extracted from the source data",
 			items: {
 				type: "object",
 				properties: {
@@ -23,6 +24,7 @@ export const scraperSchema = {
 		},
 		companies: {
 			type: "array",
+			description: "List of companies extracted from the source data",
 			items: {
 				type: "object",
 				properties: {

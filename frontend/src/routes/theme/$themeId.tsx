@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useMutation } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import { useMemo, useState, useEffect } from "react";
 import {
 	Box,
@@ -14,6 +16,7 @@ import { getAllCompanies } from "~/api/company.api";
 import { getAllPeople } from "~/api/people.api";
 import { CompanyTable } from "~/components/CompanyTable";
 import { PeopleTable } from "~/components/PeopleTable";
+import { runThemeScraper } from "~/api/agent.api";
 
 export const Route = createFileRoute("/theme/$themeId")({
 	component: RouteComponent,
@@ -40,6 +43,10 @@ function RouteComponent() {
 	const peopleQuery = useQuery({
 		queryKey: ["people"],
 		queryFn: getAllPeople,
+	});
+
+	const scrapeMutation = useMutation({
+		mutationFn: runThemeScraper,
 	});
 
 	// 👉 smooth tab switching
@@ -95,7 +102,22 @@ function RouteComponent() {
 			>
 				<Typography variant="h4">{themeName}</Typography>
 
-				<Button variant="contained">Generate</Button>
+				<Button
+					variant="contained"
+					onClick={() => scrapeMutation.mutate(themeIdNum)}
+					disabled={scrapeMutation.isPending}
+					startIcon={
+						scrapeMutation.isPending ? (
+							<CircularProgress size={14} />
+						) : (
+							<AutoAwesomeIcon fontSize="small" />
+						)
+					}
+				>
+					{scrapeMutation.isPending
+						? "Researching..."
+						: "Research theme more"}
+				</Button>
 			</Box>
 
 			{/* Tabs */}
