@@ -11,6 +11,7 @@ export async function runThemeScraper(themeId: number) {
 		if (axios.isAxiosError(err)) {
 			throw new Error(
 				err.response?.data?.error ?? "Failed to run scraper",
+				{ cause: err },
 			);
 		}
 		throw err;
