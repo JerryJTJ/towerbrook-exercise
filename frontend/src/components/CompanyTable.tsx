@@ -1,3 +1,4 @@
+import StarIcon from "@mui/icons-material/Star";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { StyledCustomLinkBlack } from "~/components/CustomLink";
 
@@ -15,6 +16,7 @@ export type CompanyApi = {
 		value: number | null;
 		source: string;
 	}[];
+	saved: boolean;
 };
 
 type CompanyRow = {
@@ -23,6 +25,7 @@ type CompanyRow = {
 	category: string;
 	theme: string;
 	score: number;
+	saved: boolean;
 	revenue: number | null;
 	EBITDA: number | null;
 	equity: number | null;
@@ -41,6 +44,7 @@ export function toCompanyRows(data: CompanyApi[]): CompanyRow[] {
 			category: c.category,
 			score: c.score,
 			theme: c.theme?.name ?? "—",
+			saved: c.saved,
 			revenue: financeMap.revenue ?? null,
 			EBITDA: financeMap.EBITDA ?? null,
 			equity: financeMap.equity ?? null,
@@ -65,6 +69,25 @@ const columns: GridColDef[] = [
 	{ field: "category", headerName: "Category", width: 140 },
 	{ field: "theme", headerName: "Theme", width: 140, type: "string" },
 	{ field: "score", headerName: "Score", width: 140, type: "string" },
+	{
+		field: "saved",
+		headerName: "Saved",
+		width: 90,
+		sortable: true,
+		renderCell: (params) => (
+			<div
+				style={{
+					display: "flex",
+					width: "100%",
+					height: "100%",
+					justifyContent: "center",
+					alignItems: "center",
+				}}
+			>
+				{params.value && <StarIcon fontSize="small" color="warning" />}
+			</div>
+		),
+	},
 	// { field: "revenue", headerName: "Revenue", width: 140, type: "number" },
 	// { field: "EBITDA", headerName: "EBITDA", width: 140, type: "number" },
 	// { field: "equity", headerName: "Equity", width: 140, type: "number" },

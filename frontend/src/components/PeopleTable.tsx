@@ -1,5 +1,6 @@
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { StyledCustomLinkBlack } from "~/components/CustomLink";
+import StarIcon from "@mui/icons-material/Star";
 
 type PersonApi = {
 	id: number;
@@ -7,6 +8,7 @@ type PersonApi = {
 	role: string;
 	theme: { id: number; name: string };
 	company: { id: number; name: string };
+	saved: boolean;
 };
 
 type PersonRow = {
@@ -15,6 +17,8 @@ type PersonRow = {
 	role: string;
 	theme: string;
 	company: string;
+	companyId: number;
+	saved: boolean;
 };
 
 const columns: GridColDef[] = [
@@ -46,6 +50,25 @@ const columns: GridColDef[] = [
 	},
 	{ field: "role", headerName: "Role", width: 140, type: "string" },
 	{ field: "theme", headerName: "Theme", width: 140, type: "string" },
+	{
+		field: "saved",
+		headerName: "Saved",
+		width: 90,
+		sortable: true,
+		renderCell: (params) => (
+			<div
+				style={{
+					display: "flex",
+					width: "100%",
+					height: "100%",
+					justifyContent: "center",
+					alignItems: "center",
+				}}
+			>
+				{params.value && <StarIcon fontSize="small" color="warning" />}
+			</div>
+		),
+	},
 ];
 
 function toPersonRows(data: PersonApi[]): PersonRow[] {
@@ -56,6 +79,7 @@ function toPersonRows(data: PersonApi[]): PersonRow[] {
 		theme: p.theme?.name ?? "",
 		company: p.company?.name ?? "",
 		companyId: p.company?.id ?? 0,
+		saved: p.saved,
 	}));
 }
 
