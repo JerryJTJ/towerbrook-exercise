@@ -47,6 +47,8 @@ export type Database = {
           id: number
           info: Json | null
           name: string
+          notes: string | null
+          saved: boolean
           score: number | null
           theme_id: number | null
           website: string | null
@@ -58,6 +60,8 @@ export type Database = {
           id?: number
           info?: Json | null
           name?: string
+          notes?: string | null
+          saved?: boolean
           score?: number | null
           theme_id?: number | null
           website?: string | null
@@ -69,6 +73,8 @@ export type Database = {
           id?: number
           info?: Json | null
           name?: string
+          notes?: string | null
+          saved?: boolean
           score?: number | null
           theme_id?: number | null
           website?: string | null
@@ -125,7 +131,9 @@ export type Database = {
           created_at: string
           id: number
           name: string | null
+          notes: string | null
           role: string | null
+          saved: boolean
           theme_id: number | null
         }
         Insert: {
@@ -134,7 +142,9 @@ export type Database = {
           created_at?: string
           id?: number
           name?: string | null
+          notes?: string | null
           role?: string | null
+          saved?: boolean
           theme_id?: number | null
         }
         Update: {
@@ -143,7 +153,9 @@ export type Database = {
           created_at?: string
           id?: number
           name?: string | null
+          notes?: string | null
           role?: string | null
+          saved?: boolean
           theme_id?: number | null
         }
         Relationships: [

@@ -1,146 +1,94 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-	Stack,
+	Box,
 	Typography,
 	Card,
 	CardActionArea,
 	CardContent,
-	Grid,
 } from "@mui/material";
 
 export const Route = createFileRoute("/")({
 	component: RouteComponent,
 });
 
+function DashboardCard({
+	to,
+	label,
+	title,
+}: {
+	to: string;
+	label: string;
+	title: string;
+}) {
+	return (
+		<Card sx={{ height: "100%" }}>
+			<CardActionArea
+				component={Link}
+				to={to}
+				sx={{
+					height: "100%",
+				}}
+			>
+				<CardContent
+					sx={{
+						height: "100%",
+						display: "flex",
+						flexDirection: "column",
+						p: 4,
+					}}
+				>
+					<Typography color="textDisabled">{label}</Typography>
+
+					<Typography variant="h5" sx={{ mt: 1 }}>
+						{title}
+					</Typography>
+				</CardContent>
+			</CardActionArea>
+		</Card>
+	);
+}
+
 function RouteComponent() {
 	return (
-		<Stack spacing={4} alignItems="center" sx={{ py: 6 }}>
-			<Grid container spacing={3} maxWidth="md" alignItems="stretch">
-				<Grid size={{ xs: 12, md: 4 }}>
-					<Card sx={{ height: "100%" }}>
-						<CardActionArea
-							component={Link}
-							to="/people"
-							sx={{ height: "100%" }}
-						>
-							<CardContent
-								sx={{
-									height: "100%",
-									display: "flex",
-									flexDirection: "column",
-								}}
-							>
-								<Typography color="textDisabled">
-									TABLE
-								</Typography>
-								<Typography variant="h5" gutterBottom>
-									People
-								</Typography>
-							</CardContent>
-						</CardActionArea>
-					</Card>
-				</Grid>
+		<Box
+			sx={{
+				height: "80vh",
+				p: 3,
+				display: "grid",
+				gap: 3,
+				gridTemplateColumns: {
+					xs: "1fr",
+					md: "repeat(3, 1fr)",
+				},
+				gridTemplateRows: {
+					xs: "auto",
+					md: "repeat(2, 1fr)",
+				},
+			}}
+		>
+			<DashboardCard to="/people" label="TABLE" title="People" />
 
-				<Grid size={{ xs: 12, md: 4 }}>
-					<Card sx={{ height: "100%" }}>
-						<CardActionArea
-							component={Link}
-							to="/companies"
-							sx={{ height: "100%" }}
-						>
-							<CardContent
-								sx={{
-									height: "100%",
-									display: "flex",
-									flexDirection: "column",
-								}}
-							>
-								<Typography color="textDisabled">
-									TABLE
-								</Typography>
-								<Typography variant="h5" gutterBottom>
-									Companies
-								</Typography>
-							</CardContent>
-						</CardActionArea>
-					</Card>
-				</Grid>
+			<DashboardCard to="/companies" label="TABLE" title="Companies" />
 
-				<Grid size={{ xs: 12, md: 4 }}>
-					<Card sx={{ height: "100%" }}>
-						<CardActionArea
-							component={Link}
-							to="/theme/1"
-							sx={{ height: "100%" }}
-						>
-							<CardContent
-								sx={{
-									height: "100%",
-									display: "flex",
-									flexDirection: "column",
-								}}
-							>
-								<Typography color="textDisabled">
-									THEME
-								</Typography>
-								<Typography variant="h5" gutterBottom>
-									Clean Energy Advisory & Development
-								</Typography>
-							</CardContent>
-						</CardActionArea>
-					</Card>
-				</Grid>
+			<DashboardCard to="/saved" label="PAGE" title="Saved" />
 
-				<Grid size={{ xs: 12, md: 4 }}>
-					<Card sx={{ height: "100%" }}>
-						<CardActionArea
-							component={Link}
-							to="/theme/2"
-							sx={{ height: "100%" }}
-						>
-							<CardContent
-								sx={{
-									height: "100%",
-									display: "flex",
-									flexDirection: "column",
-								}}
-							>
-								<Typography color="textDisabled">
-									THEME
-								</Typography>
-								<Typography variant="h5" gutterBottom>
-									Grid Infrastructure & Connection
-								</Typography>
-							</CardContent>
-						</CardActionArea>
-					</Card>
-				</Grid>
+			<DashboardCard
+				to="/theme/1"
+				label="THEME"
+				title="Clean Energy Advisory & Development"
+			/>
 
-				<Grid size={{ xs: 12, md: 4 }}>
-					<Card sx={{ height: "100%" }}>
-						<CardActionArea
-							component={Link}
-							to="/theme/3"
-							sx={{ height: "100%" }}
-						>
-							<CardContent
-								sx={{
-									height: "100%",
-									display: "flex",
-									flexDirection: "column",
-								}}
-							>
-								<Typography color="textDisabled">
-									THEME
-								</Typography>
-								<Typography variant="h5" gutterBottom>
-									Smart Water Infrastructure & Analytics
-								</Typography>
-							</CardContent>
-						</CardActionArea>
-					</Card>
-				</Grid>
-			</Grid>
-		</Stack>
+			<DashboardCard
+				to="/theme/2"
+				label="THEME"
+				title="Grid Infrastructure & Connection"
+			/>
+
+			<DashboardCard
+				to="/theme/3"
+				label="THEME"
+				title="Smart Water Infrastructure & Analytics"
+			/>
+		</Box>
 	);
 }

@@ -6,9 +6,17 @@ import {
 	Button,
 	Chip,
 	CircularProgress,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogContentText,
+	DialogTitle,
+	Divider,
+	IconButton,
 	Link,
 	Paper,
 	Stack,
+	TextField,
 	Tooltip,
 	Typography,
 } from "@mui/material";
@@ -20,11 +28,22 @@ import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import BusinessIcon from "@mui/icons-material/Business";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import StarIcon from "@mui/icons-material/Star";
+import StarBorderIcon from "@mui/icons-material/StarBorder";
+import SaveIcon from "@mui/icons-material/Save";
+import DeleteIcon from "@mui/icons-material/Delete";
 
-import { getCompanyById, runCompanyFitAgent } from "~/api/company.api";
+import {
+	deleteCompany,
+	getCompanyById,
+	runCompanyFitAgent,
+	updateCompanyNotes,
+	updateCompanySaved,
+} from "~/api/company.api";
 import { getAllPeopleByCompanyId } from "~/api/people.api";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { PeopleTable } from "~/components/PeopleTable";
 
 // ─── Route ────────────────────────────────────────────────────────────────────
@@ -91,6 +110,8 @@ interface Company {
 	score?: number;
 	info: CompanyInfo;
 	finances?: Finance[];
+	notes?: string;
+	saved?: boolean;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -121,12 +142,10 @@ const METRIC_CONFIG: Record<
 
 function formatValue(value: number): string {
 	if (value === 0) return "N/A";
-
 	if (value >= 1_000_000_000)
 		return `$${(value / 1_000_000_000).toFixed(1)}B`;
 	if (value >= 1_000_000) return `$${Math.round(value / 1_000_000)}M`;
 	if (value >= 1_000) return `$${Math.round(value / 1_000)}K`;
-
 	return `$${value}`;
 }
 
@@ -185,6 +204,200 @@ function FinanceCard({ finance }: { finance: Finance }) {
 	);
 }
 
+// ─── Notes Section ────────────────────────────────────────────────────────────
+
+function NotesSection({
+	companyId,
+	initialNotes,
+}: {
+	companyId: number;
+	initialNotes?: string;
+}) {
+	const [notes, setNotes] = useState(initialNotes ?? "");
+	const [savedNotes, setSavedNotes] = useState(initialNotes ?? "");
+
+	const isDirty = notes !== savedNotes;
+
+	const mutation = useMutation({
+		mutationFn: () => updateCompanyNotes(companyId, notes),
+		onSuccess: () => setSavedNotes(notes),
+	});
+
+	return (
+		<Paper variant="outlined" sx={{ p: 2.5, mb: 3 }}>
+			<Stack
+				direction="row"
+				alignItems="center"
+				spacing={1}
+				sx={{ pb: 2 }}
+			>
+				<Typography variant="overline" color="text.disabled">
+					Notes
+				</Typography>
+				<Button
+					size="small"
+					variant={isDirty ? "contained" : "outlined"}
+					startIcon={
+						mutation.isPending ? (
+							<CircularProgress size={13} />
+						) : (
+							<SaveIcon fontSize="small" />
+						)
+					}
+					onClick={() => mutation.mutate()}
+					disabled={mutation.isPending || !isDirty}
+					disableElevation
+				>
+					{mutation.isPending ? "Saving…" : "Save"}
+				</Button>
+			</Stack>
+
+			<TextField
+				multiline
+				minRows={3}
+				maxRows={12}
+				fullWidth
+				placeholder="Add internal notes about this company…"
+				value={notes}
+				onChange={(e) => setNotes(e.target.value)}
+				variant="outlined"
+				size="small"
+				sx={{
+					"& .MuiOutlinedInput-root": { fontSize: "0.875rem" },
+				}}
+			/>
+
+			{mutation.isError && (
+				<Typography variant="caption" color="error" mt={0.5}>
+					Failed to save — please try again.
+				</Typography>
+			)}
+
+			{mutation.isSuccess && !isDirty && (
+				<Typography variant="caption" color="text.disabled" mt={0.5}>
+					Saved
+				</Typography>
+			)}
+		</Paper>
+	);
+}
+
+// ─── Star Toggle ──────────────────────────────────────────────────────────────
+
+function StarToggle({
+	companyId,
+	initialStarred,
+}: {
+	companyId: number;
+	initialStarred?: boolean;
+}) {
+	const [saved, setSaved] = useState(initialStarred ?? false);
+
+	const mutation = useMutation({
+		mutationFn: (next: boolean) => updateCompanySaved(companyId, next),
+		onMutate: (next) => setSaved(next),
+		onError: (_err, next) => setSaved(!next),
+	});
+
+	return (
+		<Tooltip title={saved ? "Remove from watchlist" : "Add to watchlist"}>
+			<IconButton
+				size="small"
+				onClick={() => mutation.mutate(!saved)}
+				disabled={mutation.isPending}
+				sx={{ color: saved ? "warning.main" : "action.disabled" }}
+			>
+				{saved ? (
+					<StarIcon fontSize="small" />
+				) : (
+					<StarBorderIcon fontSize="small" />
+				)}
+			</IconButton>
+		</Tooltip>
+	);
+}
+
+// ─── Delete Button ────────────────────────────────────────────────────────────
+
+function DeleteButton({ companyId }: { companyId: number }) {
+	const [open, setOpen] = useState(false);
+	const navigate = useNavigate();
+	const queryClient = useQueryClient();
+
+	const mutation = useMutation({
+		mutationFn: () => deleteCompany(companyId),
+		onSuccess: () => {
+			queryClient.removeQueries({ queryKey: ["company", companyId] });
+			navigate({ to: "/companies" });
+		},
+	});
+
+	return (
+		<>
+			<Tooltip title="Delete company">
+				<IconButton
+					size="small"
+					onClick={() => setOpen(true)}
+					sx={{
+						color: "action.disabled",
+						"&:hover": { color: "error.main" },
+					}}
+				>
+					<DeleteIcon fontSize="small" />
+				</IconButton>
+			</Tooltip>
+
+			<Dialog
+				open={open}
+				onClose={() => setOpen(false)}
+				maxWidth="xs"
+				fullWidth
+			>
+				<DialogTitle>Delete company?</DialogTitle>
+				<DialogContent>
+					<DialogContentText>
+						This will permanently remove the company and all
+						associated data. This action cannot be undone.
+					</DialogContentText>
+				</DialogContent>
+				<DialogActions>
+					<Button
+						onClick={() => setOpen(false)}
+						disabled={mutation.isPending}
+					>
+						Cancel
+					</Button>
+					<Button
+						color="error"
+						variant="contained"
+						disableElevation
+						onClick={() => mutation.mutate()}
+						disabled={mutation.isPending}
+						startIcon={
+							mutation.isPending ? (
+								<CircularProgress size={13} color="inherit" />
+							) : (
+								<DeleteIcon fontSize="small" />
+							)
+						}
+					>
+						{mutation.isPending ? "Deleting…" : "Delete"}
+					</Button>
+				</DialogActions>
+				{mutation.isError && (
+					<Typography
+						variant="caption"
+						color="error"
+						sx={{ px: 3, pb: 1.5 }}
+					>
+						Failed to delete — please try again.
+					</Typography>
+				)}
+			</Dialog>
+		</>
+	);
+}
+
 // ─── Company Page ─────────────────────────────────────────────────────────────
 
 function CompanyPage({
@@ -194,8 +407,6 @@ function CompanyPage({
 	company: Company;
 	onRefetch: () => void;
 }) {
-	const queryClient = useQueryClient();
-
 	const peopleQuery = useQuery({
 		queryKey: ["people", company.id],
 		queryFn: () => getAllPeopleByCompanyId(company.id),
@@ -243,6 +454,13 @@ function CompanyPage({
 								color="primary"
 							/>,
 						)}
+
+						<StarToggle
+							companyId={company.id}
+							initialStarred={company.saved}
+						/>
+
+						<DeleteButton companyId={company.id} />
 					</Stack>
 
 					<Chip
@@ -253,6 +471,7 @@ function CompanyPage({
 						sx={{ mt: 1, textTransform: "capitalize" }}
 					/>
 				</Box>
+
 				<Button
 					sx={{ ml: "auto", alignSelf: "center" }}
 					variant={company.info ? "outlined" : "contained"}
@@ -345,7 +564,6 @@ function CompanyPage({
 			{/* INVESTMENT ANALYSIS */}
 			{(info.concerns?.length || info.strengths?.length) && (
 				<Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mb: 3 }}>
-					{/* Concerns */}
 					{!!info.concerns?.length && (
 						<Paper
 							variant="outlined"
@@ -379,7 +597,6 @@ function CompanyPage({
 						</Paper>
 					)}
 
-					{/* Strengths */}
 					{!!info.strengths?.length && (
 						<Paper
 							variant="outlined"
@@ -500,20 +717,17 @@ function CompanyPage({
 				</Paper>
 			)}
 
+			{/* NOTES */}
+			<NotesSection companyId={company.id} initialNotes={company.notes} />
+
 			{/* WEBSITE */}
 			{company.website && (
 				<Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
 					<Typography fontWeight={600}>Website</Typography>
 
-					{company.website ? (
-						<Link href={company.website} target="_blank">
-							{company.website}
-						</Link>
-					) : (
-						<Typography color="text.disabled">
-							Not listed
-						</Typography>
-					)}
+					<Link href={company.website} target="_blank">
+						{company.website}
+					</Link>
 				</Paper>
 			)}
 

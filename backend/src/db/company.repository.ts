@@ -1,5 +1,5 @@
 import { supabase } from "../index.js";
-import type { TablesInsert } from "../interfaces/supabase.js";
+import type { TablesInsert, TablesUpdate } from "../interfaces/supabase.js";
 
 export const companyRepository = {
 	async getAllCompanies() {
@@ -19,7 +19,8 @@ export const companyRepository = {
         metric,
         value,
         source
-      )
+      ),
+      saved
     `);
 
 		if (error) {
@@ -51,7 +52,9 @@ export const companyRepository = {
         metric,
         value,
         source
-      )
+      ),
+      notes,
+      saved
     `,
 			)
 			.eq("id", id)
@@ -64,6 +67,7 @@ export const companyRepository = {
 
 		return data ?? {};
 	},
+
 	async updateCompanyInfo(
 		companyId: number,
 		patch: Partial<TablesInsert<"company">>,
@@ -84,6 +88,42 @@ export const companyRepository = {
 
 		return data ?? null;
 	},
+
+	async updateCompanyNotes(
+		companyId: number,
+		notes: TablesUpdate<"company">["notes"],
+	) {
+		const { data, error } = await supabase
+			.from("company")
+			.update({ notes: String(notes) })
+			.eq("id", companyId)
+			.select()
+			.single();
+
+		if (error) {
+			console.error("updateCompanyNotesRepo error:", error);
+			throw error;
+		}
+
+		return data ?? null;
+	},
+
+	async toggleCompanySaved(companyId: number, saved: boolean) {
+		const { data, error } = await supabase
+			.from("company")
+			.update({ saved: saved })
+			.eq("id", companyId)
+			.select()
+			.single();
+
+		if (error) {
+			console.error("updateCompanySavedRepo error:", error);
+			throw error;
+		}
+
+		return data ?? null;
+	},
+
 	// Financials
 	async insertCompanyFinancials(
 		financials: TablesInsert<"company_finance">[],
@@ -94,6 +134,14 @@ export const companyRepository = {
 
 		if (error) {
 			console.error("Error inserting company financials:", error);
+			throw error;
+		}
+	},
+	async deleteCompany(id: number) {
+		const { error } = await supabase.from("company").delete().eq("id", id);
+
+		if (error) {
+			console.error("deleteCompany error:", error);
 			throw error;
 		}
 	},

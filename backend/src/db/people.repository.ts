@@ -12,10 +12,11 @@ const peopleApiResponse = `
       company:company_id (
         id,
         name
-      )
+      ),
+	  saved
     `;
 
-const peopleApiResponseDetailed = peopleApiResponse + ", call_info";
+const peopleApiResponseDetailed = peopleApiResponse + ", call_info, notes";
 
 export const peopleRepository = {
 	async getAllPeople() {
@@ -58,6 +59,45 @@ export const peopleRepository = {
 		}
 
 		return data ?? [];
+	},
+	async updatePeopleNotes(peopleId: number, notes: string) {
+		const { data, error } = await supabase
+			.from("people")
+			.update({ notes })
+			.eq("id", peopleId)
+			.select()
+			.single();
+
+		if (error) {
+			console.error("updatePeopleNotes error:", error);
+			throw error;
+		}
+
+		return data ?? null;
+	},
+	async updatePeopleSaved(peopleId: number, saved: boolean) {
+		const { data, error } = await supabase
+			.from("people")
+			.update({ saved })
+			.eq("id", peopleId)
+			.select()
+			.single();
+
+		if (error) {
+			console.error("updatePeopleSaved error:", error);
+			throw error;
+		}
+
+		return data ?? null;
+	},
+
+	async deletePeople(id: number) {
+		const { error } = await supabase.from("people").delete().eq("id", id);
+
+		if (error) {
+			console.error("deletePeople error:", error);
+			throw error;
+		}
 	},
 
 	async updatePersonCallInfo(id: number, callInfo: {}) {

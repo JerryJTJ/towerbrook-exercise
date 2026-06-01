@@ -1,15 +1,23 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
 	Avatar,
 	Box,
+	Button,
 	Chip,
 	CircularProgress,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogContentText,
+	DialogTitle,
 	Divider,
+	IconButton,
 	Paper,
 	Stack,
+	TextField,
+	Tooltip,
 	Typography,
-	Button,
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import BusinessIcon from "@mui/icons-material/Business";
@@ -23,9 +31,17 @@ import TopicIcon from "@mui/icons-material/Topic";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import StarIcon from "@mui/icons-material/Star";
+import StarBorderIcon from "@mui/icons-material/StarBorder";
+import SaveIcon from "@mui/icons-material/Save";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { StyledCustomLinkBlack } from "~/components/CustomLink";
-import { getCallBriefByPersonId, getPersonById } from "~/api/people.api";
-import axios from "axios";
+import {
+	getCallBriefByPersonId,
+	getPersonById,
+	updatePeopleSaved,
+} from "~/api/people.api";
+import { useState } from "react";
 
 export const Route = createFileRoute("/people/$peopleId")({
 	component: RouteComponent,
@@ -54,6 +70,8 @@ interface Person {
 	theme: { id: number; name: string };
 	company: { id: number; name: string };
 	call_info: CallPrepOutput | null;
+	notes?: string;
+	starred?: boolean;
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -81,6 +99,202 @@ function DetailRow({
 		</Stack>
 	);
 }
+
+// ─── Star Toggle ──────────────────────────────────────────────────────────────
+
+function StarToggle({
+	personId,
+	initialStarred,
+}: {
+	personId: number;
+	initialStarred?: boolean;
+}) {
+	const [starred, setStarred] = useState(initialStarred ?? false);
+
+	const mutation = useMutation({
+		mutationFn: (next: boolean) => updatePeopleSaved(personId, next),
+		onMutate: (next) => setStarred(next),
+		onError: (_err, next) => setStarred(!next),
+	});
+
+	return (
+		<Tooltip title={starred ? "Remove from watchlist" : "Add to watchlist"}>
+			<IconButton
+				size="small"
+				onClick={() => mutation.mutate(!starred)}
+				disabled={mutation.isPending}
+				sx={{ color: starred ? "warning.main" : "action.disabled" }}
+			>
+				{starred ? (
+					<StarIcon fontSize="small" />
+				) : (
+					<StarBorderIcon fontSize="small" />
+				)}
+			</IconButton>
+		</Tooltip>
+	);
+}
+
+// ─── Delete Button ────────────────────────────────────────────────────────────
+
+function DeleteButton({ personId }: { personId: number }) {
+	const [open, setOpen] = useState(false);
+	const navigate = useNavigate();
+	const queryClient = useQueryClient();
+
+	const mutation = useMutation({
+		mutationFn: () => deletePerson(personId),
+		onSuccess: () => {
+			queryClient.removeQueries({ queryKey: ["people", personId] });
+			navigate({ to: "/" });
+		},
+	});
+
+	return (
+		<>
+			<Tooltip title="Delete person">
+				<IconButton
+					size="small"
+					onClick={() => setOpen(true)}
+					sx={{
+						color: "action.disabled",
+						"&:hover": { color: "error.main" },
+					}}
+				>
+					<DeleteIcon fontSize="small" />
+				</IconButton>
+			</Tooltip>
+
+			<Dialog
+				open={open}
+				onClose={() => setOpen(false)}
+				maxWidth="xs"
+				fullWidth
+			>
+				<DialogTitle>Delete person?</DialogTitle>
+				<DialogContent>
+					<DialogContentText>
+						This will permanently remove this person and all
+						associated data. This action cannot be undone.
+					</DialogContentText>
+				</DialogContent>
+				<DialogActions>
+					<Button
+						onClick={() => setOpen(false)}
+						disabled={mutation.isPending}
+					>
+						Cancel
+					</Button>
+					<Button
+						color="error"
+						variant="contained"
+						disableElevation
+						onClick={() => mutation.mutate()}
+						disabled={mutation.isPending}
+						startIcon={
+							mutation.isPending ? (
+								<CircularProgress size={13} color="inherit" />
+							) : (
+								<DeleteIcon fontSize="small" />
+							)
+						}
+					>
+						{mutation.isPending ? "Deleting…" : "Delete"}
+					</Button>
+				</DialogActions>
+				{mutation.isError && (
+					<Typography
+						variant="caption"
+						color="error"
+						sx={{ px: 3, pb: 1.5 }}
+					>
+						Failed to delete — please try again.
+					</Typography>
+				)}
+			</Dialog>
+		</>
+	);
+}
+
+// ─── Notes Section ────────────────────────────────────────────────────────────
+
+function NotesSection({
+	personId,
+	initialNotes,
+}: {
+	personId: number;
+	initialNotes?: string;
+}) {
+	const [notes, setNotes] = useState(initialNotes ?? "");
+	const [savedNotes, setSavedNotes] = useState(initialNotes ?? "");
+
+	const isDirty = notes !== savedNotes;
+
+	const mutation = useMutation({
+		mutationFn: () => updatePersonNotes(personId, notes),
+		onSuccess: () => setSavedNotes(notes),
+	});
+
+	return (
+		<Paper variant="outlined" sx={{ p: 2.5, mb: 3 }}>
+			<Stack
+				direction="row"
+				alignItems="center"
+				spacing={1}
+				sx={{ pb: 2 }}
+			>
+				<Typography variant="overline" color="text.disabled">
+					Notes
+				</Typography>
+				<Button
+					size="small"
+					variant={isDirty ? "contained" : "outlined"}
+					startIcon={
+						mutation.isPending ? (
+							<CircularProgress size={13} />
+						) : (
+							<SaveIcon fontSize="small" />
+						)
+					}
+					onClick={() => mutation.mutate()}
+					disabled={mutation.isPending || !isDirty}
+					disableElevation
+				>
+					{mutation.isPending ? "Saving…" : "Save"}
+				</Button>
+			</Stack>
+
+			<TextField
+				multiline
+				minRows={3}
+				maxRows={12}
+				fullWidth
+				placeholder="Add internal notes about this company…"
+				value={notes}
+				onChange={(e) => setNotes(e.target.value)}
+				variant="outlined"
+				size="small"
+				sx={{
+					"& .MuiOutlinedInput-root": { fontSize: "0.875rem" },
+				}}
+			/>
+
+			{mutation.isError && (
+				<Typography variant="caption" color="error" mt={0.5}>
+					Failed to save — please try again.
+				</Typography>
+			)}
+
+			{mutation.isSuccess && !isDirty && (
+				<Typography variant="caption" color="text.disabled" mt={0.5}>
+					Saved
+				</Typography>
+			)}
+		</Paper>
+	);
+}
+
+// ─── Call Info Section ────────────────────────────────────────────────────────
 
 function CallInfoSection({ callInfo }: { callInfo: CallPrepOutput }) {
 	const { contactDetails: c } = callInfo;
@@ -441,7 +655,15 @@ function PersonPage({
 						<Typography variant="h5" fontWeight={600}>
 							{person.name}
 						</Typography>
+
+						<StarToggle
+							personId={person.id}
+							initialStarred={person.starred}
+						/>
+
+						<DeleteButton personId={person.id} />
 					</Stack>
+
 					<Chip
 						icon={<WorkIcon />}
 						label={person.role}
@@ -476,7 +698,7 @@ function PersonPage({
 			</Paper>
 
 			{/* Details + Theme */}
-			<Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+			<Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mb: 2 }}>
 				<Box sx={{ flex: "1 1 300px" }}>
 					<Paper
 						variant="outlined"
@@ -554,17 +776,14 @@ function PersonPage({
 								>
 									{person.theme.name}
 								</Typography>
-								<Typography
-									variant="caption"
-									color="success.main"
-								>
-									Theme ID {person.theme.id}
-								</Typography>
 							</Box>
 						</Stack>
 					</Paper>
 				</Box>
 			</Box>
+
+			{/* Notes */}
+			<NotesSection personId={person.id} initialNotes={person.notes} />
 
 			{/* Call Brief */}
 			{person.call_info && (
