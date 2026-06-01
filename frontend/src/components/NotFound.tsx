@@ -1,27 +1,71 @@
 import { Link } from "@tanstack/react-router";
+import {
+	Box,
+	Card,
+	CardContent,
+	Typography,
+	Button,
+	Stack,
+} from "@mui/material";
 
-export function NotFound({ children }: { children?: any }) {
+export function NotFound({ children }: { children?: React.ReactNode }) {
 	return (
-		<div className="space-y-2 p-2">
-			<div className="text-gray-600 dark:text-gray-400">
-				{children || (
-					<p>The page you are looking for does not exist.</p>
-				)}
-			</div>
-			<p className="flex items-center gap-2 flex-wrap">
-				<button
-					onClick={() => window.history.back()}
-					className="bg-emerald-500 text-white px-2 py-1 rounded-sm uppercase font-black text-sm"
-				>
-					Go back
-				</button>
-				<Link
-					to="/"
-					className="bg-cyan-600 text-white px-2 py-1 rounded-sm uppercase font-black text-sm"
-				>
-					Start Over
-				</Link>
-			</p>
-		</div>
+		<Box
+			sx={{
+				minHeight: "60vh",
+				display: "flex",
+				alignItems: "center",
+				justifyContent: "center",
+				p: 2,
+			}}
+		>
+			<Card
+				elevation={6}
+				sx={{
+					maxWidth: 420,
+					width: "100%",
+					borderRadius: 3,
+				}}
+			>
+				<CardContent>
+					<Stack spacing={3} alignItems="center" textAlign="center">
+						{/* Title */}
+						<Typography variant="h3" fontWeight={700}>
+							404
+						</Typography>
+
+						{/* Message */}
+						<Typography variant="body2" color="text.secondary">
+							{children ||
+								"The page you’re looking for does not exist."}
+						</Typography>
+
+						{/* Actions */}
+						<Stack
+							direction={{ xs: "column", sm: "row" }}
+							spacing={2}
+							width="100%"
+						>
+							<Button
+								variant="outlined"
+								fullWidth
+								onClick={() => window.history.back()}
+							>
+								Go back
+							</Button>
+
+							<Button
+								variant="contained"
+								fullWidth
+								component={Link}
+								to="/"
+							>
+								Start over
+							</Button>
+						</Stack>
+					</Stack>
+				</CardContent>
+			</Card>
+		</Box>
 	);
 }

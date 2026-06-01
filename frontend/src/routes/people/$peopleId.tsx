@@ -37,11 +37,13 @@ import SaveIcon from "@mui/icons-material/Save";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { StyledCustomLinkBlack } from "~/components/CustomLink";
 import {
+	deletePeople,
 	getCallBriefByPersonId,
 	getPersonById,
 	updatePeopleSaved,
 } from "~/api/people.api";
 import { useState } from "react";
+import { NotFound } from "~/components/NotFound";
 
 export const Route = createFileRoute("/people/$peopleId")({
 	component: RouteComponent,
@@ -143,7 +145,7 @@ function DeleteButton({ personId }: { personId: number }) {
 	const queryClient = useQueryClient();
 
 	const mutation = useMutation({
-		mutationFn: () => deletePerson(personId),
+		mutationFn: () => deletePeople(personId),
 		onSuccess: () => {
 			queryClient.removeQueries({ queryKey: ["people", personId] });
 			navigate({ to: "/" });
@@ -816,6 +818,10 @@ function RouteComponent() {
 				<CircularProgress />
 			</Box>
 		);
+	}
+
+	if (!query.data?.id) {
+		return <NotFound />;
 	}
 
 	if (query.isError) {

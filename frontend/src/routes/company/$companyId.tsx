@@ -45,6 +45,7 @@ import { getAllPeopleByCompanyId } from "~/api/people.api";
 import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { PeopleTable } from "~/components/PeopleTable";
+import { NotFound } from "~/components/NotFound";
 
 // ─── Route ────────────────────────────────────────────────────────────────────
 
@@ -757,6 +758,10 @@ function RouteComponent() {
 				<CircularProgress />
 			</Box>
 		);
+	}
+
+	if (!company.data?.id) {
+		return <NotFound />;
 	}
 
 	if (company.isError) {
