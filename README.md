@@ -32,6 +32,10 @@ The TowerBrook People Engine is a full-stack web app built to discover, research
 3. Set environment variables
 4. `pnpm run dev`
 
+## Demo
+
+The website can be found at [https://towerbrook-exercise-frontend.onrender.com/](https://towerbrook-exercise-frontend.onrender.com/). Note that there is cold startup latency; Render's spin down after periods of inactivity it will take up to a minute to start it up again.
+
 ## AI usage
 
 - `backend/src/agents/scraper.ts` uses Gemini to clean Tavily search results into a structured people-and-company schema.
