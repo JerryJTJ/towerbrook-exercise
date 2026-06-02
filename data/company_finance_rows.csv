@@ -1,0 +1,13 @@
+id,created_at,metric,value,source,company_id
+2,2026-05-30 08:04:33.309509+00,revenue,380000000,https://www.privco.com/company/clean-energy-advisors,103
+3,2026-05-30 08:04:33.309509+00,EBITDA,57000000,Estimate based on industry averages for similar clean‑energy advisory firms,103
+4,2026-05-30 08:04:33.309509+00,equity,400000000,https://www.privco.com/company/clean-energy-advisors,103
+5,2026-05-31 09:14:38.948975+00,revenue,36.5,https://www.triotech.com/wp-content/uploads/2025/10/Trio-Tech-International-Investor-Presentation-v7-8.10.25-1.pdf,104
+6,2026-05-31 09:14:38.948975+00,EBITDA,665942,https://ng.investing.com/pro/TWSE:6862/explorer/ebitda,104
+7,2026-05-31 09:14:38.948975+00,equity,32464,https://www.triotech.com/investor-relations,104
+11,2026-05-31 10:15:15.919806+00,revenue,0,"Not publicly available (no figure found in company filings, annual reports, Bloomberg, Growjo estimate, or other reputable sources).",105
+12,2026-05-31 10:15:15.919806+00,EBITDA,0,"Not publicly available (no figure found in company filings, annual reports, Bloomberg, or other reputable sources).",105
+13,2026-05-31 10:15:15.919806+00,equity,0,"Not publicly available (no figure found in company filings, annual reports, Bloomberg, or other reputable sources).",105
+14,2026-05-31 10:20:09.988961+00,revenue,0,Not publicly available – no disclosed revenue (source: https://www.onpeakcapital.com/who-we-are),106
+15,2026-05-31 10:20:09.988961+00,EBITDA,0,Not publicly available – no disclosed EBITDA (source: https://www.onpeakcapital.com/who-we-are),106
+16,2026-05-31 10:20:09.988961+00,equity,3000,Onpeak Capital LLC Financial Statements for year ended Dec 31 2025 (source: https://content-archive.fast-edgar.com/20260123/AF22322CN22252W2222G2242RM8NF222A282/2025-12OnPeakAuditPUBLIC.pdf),106
