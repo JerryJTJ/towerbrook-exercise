@@ -6,6 +6,7 @@ import { createClient } from "@supabase/supabase-js";
 import CompanyRouter from "./db/company.routes.js";
 import PeopleRouter from "./db/people.routes.js";
 import agentsRouter from "./agents/agents.routes.js";
+import axios from "axios";
 
 const app = express();
 app.use(express.json());
@@ -27,20 +28,18 @@ export const supabase = createClient<Database>(
 app.use("/db/company", CompanyRouter);
 app.use("/db/people", PeopleRouter);
 app.use("/api/agents", agentsRouter);
-// app.post("/scraper/theme/:id", async (req, res) => {
-// 	const themeId = req.params.id;
 
-// 	const { data, error } = await supabase
-// 		.from("theme")
-// 		.select("name")
-// 		.eq("id", Number(themeId))
-// 		.single();
-
-// 	if (error || !data) return res.status(500).json({ error: error.message });
-
-// 	const resp = await runScraperAgent(data.name);
-// 	res.send(resp);
-// });
+// Keep database & backend from sleeping on free hosting tiers
+app.get("/ping", async (req, res) => {
+	const data = await supabase.from("company").select("*").limit(1);
+	res.end().status(200);
+});
+const SERVER_URL = process.env.SERVER_URL;
+if (SERVER_URL) {
+	setInterval(() => {
+		void axios.get(`${SERVER_URL}/ping`);
+	}, 300000);
+}
 
 app.listen(port, () => {
 	console.log(`Example app listening on port ${port}`);

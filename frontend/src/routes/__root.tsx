@@ -22,7 +22,15 @@ export const Route = createRootRouteWithContext<{
 	queryClient: QueryClient;
 }>()({
 	head: () => ({
-		links: [{ rel: "stylesheet", href: fontsourceVariableRobotoCss }],
+		links: [
+			{ rel: "stylesheet", href: fontsourceVariableRobotoCss },
+			{ rel: "icon", href: "/favicon.ico" },
+		],
+		meta: [
+			{
+				title: "TowerBrook People Engine",
+			},
+		],
 	}),
 	component: RootComponent,
 	errorComponent: (props) => {

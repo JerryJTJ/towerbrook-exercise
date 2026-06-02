@@ -4,6 +4,7 @@
 		"@google/genai": "^2.7.0",
 		"@supabase/supabase-js": "^2.106.2",
 		"@tavily/core": "^0.7.3",
+		"axios": "^1.16.1",
 		"cors": "^2.8.6",
 		"dotenv": "^17.4.2",
 		"express": "^5.2.1",
